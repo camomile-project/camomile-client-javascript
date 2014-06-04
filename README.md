@@ -1,9 +1,9 @@
 #camomile-client-javascript
 
 
-###Installation  
-Copier client.js dans le projet + jquery  
-Insertion dans le code html :  
+###Install  
+Copy client.js and the JQuery librairy in the project folder :  
+Insert in the HTML code :  
 ```javascript  
   <script type="text/javascript" src="client.js"></script>
   <script type="text/javascript" src="jquery.js"></script>
@@ -12,35 +12,34 @@ Insertion dans le code html :
   </script>
 ```
 
-###Utilisation  
-N.B. :  les callbacks ne seront executees que si la requete a le statut success et prennent en parametre le resultat de la requete en format JSON
+###Functions  
+N.B. :  callback(data) (where data is the answer of the request (JSON)) is the function for the processing of the answer.
 
 * _login :_  
-  login(callback, username, password, adr) 
-  adr : adresse du serveur  
+  login(callback, username, password, addressOfTheServer)
 * _logout :_  
   logout(callback)  
-* _Creer un utilisateur :_  
+* _Create  user :_  
   create_user(callback, name, password, affiliation)  
-* _Voir tous les utilisateurs :_  
+* _See all users :_  
   all_user(callback)  
 * _ACL Get/Set_  
   set_ACL(callback, username, userright, idCorpus, [idMedia[, idLayer[, idAnnotation]]])  
   get_ACL(callback, idCorpus, [idMedia[, idLayer[, idAnnotation]]] )  
-  userright appartient à {'N', 'A', 'C', 'D', 'R', 'V'}  
+  userright is a member of {'N', 'A', 'C', 'D', 'R', 'V'}  
 * _Corpus/Media/Layer/Annotation_  
-  Pour chaque element, 3 fonctions (X appartient {Corpus, Media, Layer, Annotation}, ) :  
-    * getX(callback, [idCorpus [, idMedia [, idLayer]]]) : retourne tous les X  
-    * XbyId(callback, idCorpus [, idMedia [, idLayer [, idAnnotation]]]) : retourne le X voulu  
-    * create_X(callback, [idCorpus, [idMedia, [idLayer]]], [Contenu des elements : Name, fragment_typ, ...]) : cree un element X a partir des entrees  
-    * set_X(callback, idCorpus, [idMedia, [idLayer[, idAnnotation]]], [Contenu des elements a changer : Name, fragment_typ, ...]) : cree un element X a partir des entrees  
-    * remove_X(callback, idCorpus[, idMedia[, idLayer[, idAnnotation]]]) : supprime l'element dont on a passe tous les ids  
+  There are 5 functions for each element X (X a member of  {Corpus, Media, Layer, Annotation}) :  
+    * getX(callback, [idCorpus [, idMedia [, idLayer]]]) : return all X  
+    * XbyId(callback, idCorpus [, idMedia [, idLayer [, idAnnotation]]]) : return the X with this id  
+    * create_X(callback, [idCorpus, [idMedia, [idLayer]]], [Datas of X] : name, fragment_type, ...) : Create on element X with this data
+    * set_X(callback, idCorpus, [idMedia, [idLayer[, idAnnotation]]], [Data of X to change]) : Modify the data of the element X 
+    * remove_X(callback, idCorpus[, idMedia[, idLayer[, idAnnotation]]]) : Delete the element X  
 
-###Exemple  
+###Example  
 ```javascript 
-  function cb(data)[console.log(data);}
+  function cb(data){console.log(data);}
   
-  login(cb, "root", "camomile", "http://lit-shore-5364.herokuapp.com");  
+  login(cb, "root", "****", "http://lit-shore-5364.herokuapp.com");  
   all_user(cb);  
   create_user(cb, "test", "test", "test");  
   all_user(cb);  
@@ -52,6 +51,6 @@ N.B. :  les callbacks ne seront executees que si la requete a le statut success 
   corpusById(cb, "538dc54749555402006f1c52");
   get_ACL(cb, "538dc54749555402006f1c52");
   set_ACL( cb, "marie", "C", "538dc54749555402006f1c52");  
-  remove_corpus(cb, "538dc54749555402006f1c52" )
-  logout(cb)
+  remove_corpus(cb, "538dc54749555402006f1c52" );
+  logout(cb);
 ```
