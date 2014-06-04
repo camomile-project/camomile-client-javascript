@@ -1,10 +1,9 @@
 
 
 camomile = function(){
-	var adresse = ""
+	var adresse = "";
 	
 	function camomile(){
-		this.truc = "truc"; 
 	}
 	
 	/* Login */
