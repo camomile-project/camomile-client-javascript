@@ -1,165 +1,271 @@
-
+/* 
+ * Gestion des requetes au serveur
+ */
 
 camomile = function(){
-	var adresse = "";
+	var adresse = ""
 	
+	/**
+	 * Description
+	 * @method camomile
+	 * @return 
+	 */
 	function camomile(){
 	}
 	
-	/* Login */
-	camomile.login = function(callback, username, password, adr) {
+	/**
+	 * Login 
+	 * @method login
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String username
+	 * @param String password
+	 * @param String adr
+	 * @return 
+	 */
+	camomile.login = function(callbackFunction, username, password, adr) {
 		// log
 		adresse= adr
 		var data = {};
 		data.username = username;
 		data.password = password;
-		this.post("/login", data, callback);
+		camomile.post("/login", data, callbackFunction);
 	}
-
-
-	/* Logout */
-	camomile.logout = function(callback) {
-		this.post("/logout", null, callback);
+    
+    
+	/**
+	 * Logout 
+	 * @method logout
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @return 
+	 */
+	camomile.logout = function(callbackFunction) {
+		camomile.post("/logout", null, callbackFunction);
 	}
-
-
-	/* Popup error */ 
+    
+    
+	/**
+	 * Popup error 
+	 * @method error
+	 * @param int status
+	 * @param String errorThrown
+	 * @param String textStatus
+	 * @return 
+	 */
 	camomile.error = function(status, errorThrown, textStatus){
-		alert(textStatus + " " + status +" : " + errorThrown);	
+		console.log(status, errorThrown, textStatus);
+		alert(textStatus + " " + status +" : " + errorThrown);
+		// Pourrait etre etoffe 
 	}
-
-	/* Get */
-	camomile.get = function(route, callback){
-		$j.ajax({
-			url: adresse + route,
-			type: 'GET',
-			success: function(data) {
-				callback(data);
-			},
-			crossDomain: true,
-			//dataType: 'json', // Format of the answer
-			xhrFields: {
-				withCredentials: true
-			},
-			error: function(jqXHR, textStatus, errorThrown) {
-				error(jqXHR.status, errorThrown, textStatus);
-			}
-		});
+    
+	/**
+	 * Get 
+	 * @method get
+	 * @param String route
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @return 
+	 */
+	camomile.get = function(route, callbackFunction){
+		$j.ajax(
+			{
+                url: adresse + route,
+                type: 'GET',
+                success: function(data) {
+					callbackFunction(data);
+                },
+                crossDomain: true,
+                //dataType: 'json', // Format of the answer
+                xhrFields: {
+					withCredentials: true
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+					camomile.error(jqXHR.status, errorThrown, textStatus);
+                }
+            }
+        );
 	}
-
-
-	/* Delete */
-	camomile.del = function(route, callback){
-		$j.ajax({
-			url:  adresse + route,
-			type: 'DELETE',
-			success: function(data) {
-				callback(data);
-			},
-			crossDomain: true,
-			//dataType: 'json',  // Format of the answer
-			xhrFields: {
-				withCredentials: true
-			},
-			error: function(jqXHR, textStatus, errorThrown) {
-				error(jqXHR.status);
-			}
-		});	
+    
+    
+	/**
+	 * Delete 
+	 * @method del
+	 * @param String route
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @return 
+	 */
+	camomile.del = function(route, callbackFunction){
+		$j.ajax(
+			{
+                url:  adresse + route,
+                type: 'DELETE',
+                success: function(data) {
+					callbackFunction(data);
+                },
+                crossDomain: true,
+                //dataType: 'json',  // Format of the answer
+                xhrFields: {
+					withCredentials: true
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+					camomile.error(jqXHR.status);
+                }
+            }
+        );
 	}
-
-	/* Post */
-	camomile.post = function(route, data, callback){
+    
+	/**
+	 * Post 
+	 * @method post
+	 * @param String route
+	 * @param JSON data
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @return 
+	 */
+	camomile.post = function(route, data, callbackFunction){
 		if (data != null){ // For request as login
-			$j.ajax({
-				url:  adresse + route,
-				type: 'POST',
-				data: JSON.stringify(data),
-				contentType: 'application/json',
-				success: function(data) {
-					callback(data);
-				},
-				crossDomain: true,
-				//dataType: 'json',  // Format of the answer
-				xhrFields: {
-					withCredentials: true
-				},
-				error: function(jqXHR, textStatus, errorThrown) {
-				    error(jqXHR.status, errorThrown, textStatus);
-				}
-			});
+			$j.ajax(
+				{
+                    url:  adresse + route,
+                    type: 'POST',
+                    data: JSON.stringify(data),
+                    contentType: 'application/json',
+                    success: function(data) {
+						callbackFunction(data);
+                    },
+                    crossDomain: true,
+                    //dataType: 'json',  // Format of the answer
+                    xhrFields: {
+						withCredentials: true
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+				    	camomile.error(jqXHR.status, errorThrown, textStatus);
+                    }
+                }
+            );
 		} else { // For request as logout
-			$j.ajax({
-				url:  adresse + route,
-				type: 'POST',
-				success: function(data) {
-					callback(data);
-				},
-				crossDomain: true,
-				//dataType: 'json',  // Format of the answer
-				xhrFields: {
-					withCredentials: true
-				},
-				error: function(jqXHR, textStatus, errorThrown) {
-					error(jqXHR.status, errorThrown, textStatus);
-				}
-			});
+			$j.ajax(
+				{
+                    url:  adresse + route,
+                    type: 'POST',
+                    success: function(data) {
+						callbackFunction(data);
+                    },
+                    crossDomain: true,
+                    //dataType: 'json',  // Format of the answer
+                    xhrFields: {
+						withCredentials: true
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+						camomile.error(jqXHR.status, errorThrown, textStatus);
+                    }
+                }
+            );
 		}
 	}
-
-
-	/* Put */
-	camomile.put = function(route, data, callback){
-		$j.ajax({
-			url:  adresse + route,
-			type: 'PUT',
-			data: JSON.stringify(data),
-			contentType: 'application/json',
-			success: function(data) {
-				callback(data);
-			},
-			crossDomain: true,
-			//dataType: 'json',  // Format of the answer
-			xhrFields: {
-				withCredentials: true
-			},
-			error: function(jqXHR, textStatus, errorThrown) {
-				error(jqXHR.status);
-			}
-		});
+    
+    
+	/**
+	 * Put 
+	 * @method put
+	 * @param String route
+	 * @param JSON data
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @return 
+	 */
+	camomile.put = function(route, data, callbackFunction){
+		$j.ajax(
+			{
+                url:  adresse + route,
+                type: 'PUT',
+                data: JSON.stringify(data),
+                contentType: 'application/json',
+                success: function(data) {
+					callbackFunction(data);
+                },
+                crossDomain: true,
+                //dataType: 'json',  // Format of the answer
+                xhrFields: {
+					withCredentials: true
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+					camomile.error(jqXHR.status);
+                }
+            }
+        );
 	}
-
-	/* Create User */
-	camomile.create_user = function(callback, name, password, affiliation){
+    
+	/**
+	 * Create User 
+	 * @method create_user
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String name
+	 * @param String password
+	 * @param String affiliation
+	 * @return 
+	 */
+	camomile.create_user = function(callbackFunction, name, password, affiliation){
 		var data = {};
 		data.username = name;
 		data.password = password;
 		data.affiliation = affiliation;
-		this.post("/user", data, callback);
+		camomile.post("/user", data, callbackFunction);
 	}
-
-	/* See All User */
-	camomile.all_user = function(callback){
-		this.get("/user", callback);
+    
+	/**
+	 * See All User 
+	 * @method all_user
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @return 
+	 */
+	camomile.all_user = function(callbackFunction){
+		camomile.get("/user", callbackFunction);
 	}
-
-
-	/* Get ACL for an element */
-	camomile.get_ACL = function(callback, idCorpus, idMedia, idLayer, idAnnotation){
-		this.get((route(idCorpus, idMedia, idLayer, idAnnotation) + "/acl"), callback);
+    
+    
+	/**
+	 * Get ACL for an element 
+	 * @method get_ACL
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String idCorpus
+	 * @param String idMedia
+	 * @param String idLayer
+	 * @param String idAnnotation
+	 * @return 
+	 */
+	camomile.get_ACL = function(callbackFunction, idCorpus, idMedia, idLayer, idAnnotation){
+		camomile.get((route(idCorpus, idMedia, idLayer, idAnnotation) + "/acl"), callbackFunction);
 	}
-
-	/* Set ACL for an element */
-	camomile.set_ACL = function(callback, un, ur, idCorpus, idMedia, idLayer, idAnnotation){
+    
+	/**
+	 * Set ACL for an element 
+	 * @method set_ACL
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String un
+	 * @param String ur
+	 * @param String idCorpus
+	 * @param String idMedia
+	 * @param String idLayer
+	 * @param String idAnnotation
+	 * @return 
+	 */
+	camomile.set_ACL = function(callbackFunction, username, userright, idCorpus, idMedia, idLayer, idAnnotation){
 		var data = {};
-		data.username = un;
-		data.userright = ur;
-		this.put((route(idCorpus, idMedia, idLayer, idAnnotation) + "/acl"), data, callback);
+		data.username = username;
+		data.userright = userright;
+		camomile.put((route(idCorpus, idMedia, idLayer, idAnnotation) + "/acl"), data, callbackFunction);
 	}
-
-
-	/* Route builder */
+    
+    
+	/**
+	 * Route builder 
+	 * @method route
+	 * @param String idCorpus
+	 * @param String idMedia
+	 * @param String idLayer
+	 * @param String idAnnotation
+	 * @return url
+	 */
 	camomile.route = function(idCorpus, idMedia, idLayer, idAnnotation){
-		var url = ""; 
+		var url = "";
 		if(idCorpus != null){
 			url += "/corpus/" + idCorpus;
 			if(idMedia != null){
@@ -172,158 +278,343 @@ camomile = function(){
 				}
 			}
 		}
-		return url; 
+		return url;
 	}
-
+    
 	/************/
 	/** CORPUS **/
 	/************/
-
-	/* Corpus builder */
+    
+	/**
+	 * Corpus builder 
+	 * @method corpus
+	 * @param String name
+	 * @return data
+	 */
 	camomile.corpus = function(name){
 		var data = {};
 		data.name = name;
 		return data;
 	}
-	/* Get all corpus */
+	/**
+	 * Get all corpus 
+	 * @method getCorpus
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @return 
+	 */
 	camomile.getCorpus = function(callbackFunction){
-		this.get("/corpus", callbackFunction);
+		camomile.get("/corpus", callbackFunction);
 	}
-
-	/* Get corpus by name */
+    
+	/**
+	 * Get corpus by name 
+	 * @method corpusById
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String idCorpus
+	 * @return 
+	 */
 	camomile.corpusById = function(callbackFunction, idCorpus){
-		this.get(route(idCorpus), callbackFunction);
+		camomile.get(camomile.route(idCorpus), callbackFunction);
 	}
-
-	/* New corpus */
+    
+	/**
+	 * New corpus 
+	 * @method create_corpus
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String name
+	 * @return 
+	 */
 	camomile.create_corpus = function(callbackFunction, name){
-		this.post("/corpus", corpus(name), callbackFunction);
+		camomile.post("/corpus", camomile.corpus(name), callbackFunction);
 	}
-
-	/* Set Corpus */
+    
+	/**
+	 * Set Corpus 
+	 * @method set_corpus
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String idCorpus
+	 * @param String name
+	 * @return 
+	 */
 	camomile.set_corpus = function(callbackfunction, idCorpus, name){
-		this.put(route(idCorpus), corpus(name), callbackfunction);
+		camomile.put(camomile.route(idCorpus), camomile.corpus(name), callbackfunction);
 	}
-
-	/* Remove Corpus*/ 
+    
+	/**
+	 * Remove Corpus
+	 * @method remove_corpus
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String idCorpus
+	 * @return 
+	 */
 	camomile.remove_corpus = function(callbackFunction, idCorpus){
-		this.del(route(idCorpus), callbackFunction);
-
+		camomile.del(camomile.route(idCorpus), callbackFunction);
+        
 	}
-
+    
 	/***********/
 	/** MEDIA **/
 	/***********/
-
-	/* Media builder */
+    
+	/**
+	 * Media builder 
+	 * @method media
+	 * @param String name
+	 * @param String url
+	 * @return data
+	 */
 	camomile.media = function(name, url){
 		var data = {};
-		data.name = name; 
+		data.name = name;
 		data. url = url;
 		return data;
 	}
-
-	/* Get all media */
+    
+	/**
+	 * Get all media 
+	 * @method getMedias
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String idCorpus
+	 * @return 
+	 */
 	camomile.getMedias = function(callbackFunction, idCorpus){
-		this.get(route(idCorpus) + "/media", callbackFunction);
+		camomile.get(camomile.route(idCorpus) + "/media", callbackFunction);
 	}
-
-	/* Get media by name */
+    
+	/**
+	 * Get media by name 
+	 * @method mediaById
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String idCorpus
+	 * @param String idMedia
+	 * @return 
+	 */
 	camomile.mediaById = function(callbackFunction, idCorpus, idMedia ){
-		this.get(route(idCorpus, idMedia) , callbackFunction);
+		camomile.get(camomile.route(idCorpus, idMedia) , callbackFunction);
 	}
-
-	/* New Media */
-	camomile.create_media = function(callbackFunction, idCorpus, name, url){ 
-		this.post(route(idCorpus) + "/media", media(name, url), callbackFunction);
+    
+	/**
+	 * New Media 
+	 * @method create_media
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String idCorpus
+	 * @param String name
+	 * @param String url
+	 * @return 
+	 */
+	camomile.create_media = function(callbackFunction, idCorpus, name, url){
+		camomile.post(camomile.route(idCorpus) + "/media", camomile.media(name, url), callbackFunction);
 	}
-
-	/* Set Media */
+    
+	/**
+	 * Set Media 
+	 * @method set_media
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String idCorpus
+	 * @param String idMedia
+	 * @param String name
+	 * @param String url
+	 * @return 
+	 */
 	camomile.set_media = function(callbackFunction, idCorpus, idMedia, name, url){
-		this.put(route(idCorpus, idMedia), media(name, url), callbackFunction);
+		camomile.put(camomile.route(idCorpus, idMedia), camomille.media(name, url), callbackFunction);
 	}
-
-	/* Remove Media*/ 
+    
+	/**
+	 * Remove Media
+	 * @method remove_media
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String idCorpus
+	 * @param String idMedia
+	 * @return 
+	 */
 	camomile.remove_media = function(callbackFunction, idCorpus, idMedia){
-		this.del(route(idCorpus, idMedia), callbackFunction);
-
+		camomile.del(camomile.route(idCorpus, idMedia), callbackFunction);
+        
 	}
-
+    
 	/***********/
 	/** LAYER **/
 	/***********/
-
-	/* Layer builder */
+    
+	/**
+	 * Layer builder 
+	 * @method layer
+	 * @param String layertype
+	 * @param String fragmenttype
+	 * @param String datatype
+	 * @param String source
+	 * @return data
+	 */
 	camomile.layer = function(layertype, fragmenttype, datatype, source){
 		var data = {}
-		data.layer_type = layertype; 
+		data.layer_type = layertype;
 		data.fragment_type = fragmenttype;
 		data.data_type = datatype;
 		data.source = source;
 		return data;
 	}
-	/* Get all layer */
+	/**
+	 * Get all layer 
+	 * @method getLayers
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String idCorpus
+	 * @param String idMedia
+	 * @return 
+	 */
 	camomile.getLayers = function(callbackFunction, idCorpus, idMedia){
-		this.get(route(idCorpus, idMedia) + "/layer", callbackFunction);
+		camomile.get(camomile.route(idCorpus, idMedia) + "/layer", callbackFunction);
 	}
-
-	/* Get Layer by name */
+    
+	/**
+	 * Get Layer by name 
+	 * @method layerById
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String idCorpus
+	 * @param String idMedia
+	 * @param String idLayer
+	 * @return 
+	 */
 	camomile.layerById = function(callbackFunction, idCorpus, idMedia, idLayer){
-		this.get(route(idCorpus, idMedia, idLayer), callbackFunction);
+		camomile.get(camomile.route(idCorpus, idMedia, idLayer), callbackFunction);
 	}
-
-	/* New Layer */
+    
+	/**
+	 * New Layer 
+	 * @method create_layer
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String idCorpus
+	 * @param String idMedia
+	 * @param String layertyp
+	 * @param String fragmenttyp
+	 * @param String datatyp
+	 * @param String source
+	 * @return 
+	 */
 	camomile.create_layer = function(callbackFunction, idCorpus, idMedia, layertyp, fragmenttyp, datatyp, source){
-		this.post(route(idCorpus, idMedia) + "/layer", layer(layertyp, fragmenttyp, datatyp, source), callbackFunction);
+		camomile.post(camomile.route(idCorpus, idMedia) + "/layer", camomile.layer(layertyp, fragmenttyp, datatyp, source), callbackFunction);
 	}
-
-	/* Set Layer */
+    
+	/**
+	 * Set Layer 
+	 * @method set_layer
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String idCorpus
+	 * @param String idMedia
+	 * @param String idLayer
+	 * @param String layertyp
+	 * @param String fragtyp
+	 * @param String datatyp
+	 * @param String source
+	 * @return 
+	 */
 	camomile.set_layer = function(callbackFunction, idCorpus, idMedia, idLayer, layertyp, fragtyp, datatyp, source){
-		this.put(route(idCorpus, idMedia, idLayer), layer(layertyp, fragtyp, datatyp, source), callbackFunction);
+		camomile.put(camomile.route(idCorpus, idMedia, idLayer), camomile.layer(layertyp, fragtyp, datatyp, source), callbackFunction);
 	}
-
-	/* Remove Layer*/ 
+    
+	/**
+	 * Remove Layer
+	 * @method remove_layer
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String idCorpus
+	 * @param String idMedia
+	 * @param String idLayer
+	 * @param String callbackFunction
+	 * @return 
+	 */
 	camomile.remove_layer = function(callbackFunction, idCorpus, idMedia, idLayer, callbackFunction){
-		this.del(route(idCorpus, idMedia, idLayer), callbackFunction);
-
+		camomile.del(camomile.route(idCorpus, idMedia, idLayer), callbackFunction);
+        
 	}
-
+    
 	/****************/
 	/** ANNOTATION **/
 	/****************/
-
-	/* Annotation builder */
-	camomile.annotation = function(fragmenttyp, datatyp){
+    
+	/**
+	 * Annotation builder 
+	 * @method annotation
+	 * @param String fragmenttyp
+	 * @param String datatyp
+	 * @return data
+	 */
+	camomile.annotation = function(frag, dat){
 		var data = {};
-		data.fragment_typ = fragmenttyp;
-		data.datatyp = datatyp;
+		data.fragment = frag;
+		data.data = dat;
 		return data;
 	}
-
-	/* Get all Annotation */
+    
+	/**
+	 * Get all Annotation 
+	 * @method getAnnotations
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String idCorpus
+	 * @param String idMedia
+	 * @param String idLayer
+	 * @return 
+	 */
 	camomile.getAnnotations = function(callbackFunction, idCorpus, idMedia, idLayer){
-		this.get(route(idCorpus, idMedia, idLayer) + "/annotation", callbackFunction);
+		camomile.get(camomile.route(idCorpus, idMedia, idLayer) + "/annotation", callbackFunction);
 	}
-
-	/* Get Annotation by name */
+    
+	/**
+	 * Get Annotation by name 
+	 * @method annotationById
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String idCorpus
+	 * @param String idMedia
+	 * @param String idLayer
+	 * @param String idAnnotation
+	 * @return 
+	 */
 	camomile.annotationById = function(callbackFunction, idCorpus, idMedia, idLayer, idAnnotation){
-		this.get(route(idCorpus, idMedia, idLayer, idAnnotation), callbackFunction);
+		camomile.get(camomile.route(idCorpus, idMedia, idLayer, idAnnotation), callbackFunction);
 	}
-
-	/* New Annotation */
+    
+	/**
+	 * New Annotation 
+	 * @method create_annotation
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String idCorpus
+	 * @param String idMedia
+	 * @param String idLayer
+	 * @param String frag
+	 * @param String dat // Forme : "[1, 2, 3, …]"
+	 * @return 
+	 */
 	camomile.create_annotation = function(callbackFunction, idCorpus, idMedia, idLayer, frag, dat){
-		this.post(route(idCorpus, idMedia, idLayer) + "/annotation", annotation(frag, dat), callbackFunction);
+		camomile.post(camomile.route(idCorpus, idMedia, idLayer) + "/annotation", camomile.annotation(frag, dat), callbackFunction);
 	}
-
-	/* Set Annotation*/
+    
+	/**
+	 * Set Annotation
+	 * @method set_annotation
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String idCorpus
+	 * @param String idMedia
+	 * @param String idLayer
+	 * @param String idAnnotation
+	 * @param String frag
+	 * @param String dat
+	 * @return 
+	 */
 	camomile.set_annotation = function(callbackFunction, idCorpus, idMedia, idLayer, idAnnotation, frag, dat){
-		this.put(route(idCorpus, idMedia, idLayer, idAnnotation), annotation(frag, dat), callbackFunction);
+		camomile.put(camomile.route(idCorpus, idMedia, idLayer, idAnnotation), camomile.annotation(frag, dat), callbackFunction);
 	}
-
-	/* Remove Annotation*/ 
+    
+	/**
+	 * Remove Annotation
+	 * @method remove_annotation
+	 * @param function callbackFunction(data) ou data sous format JSON
+	 * @param String idCorpus
+	 * @param String idMedia
+	 * @param String idLayer
+	 * @param String idAnnotation
+	 * @return 
+	 */
 	camomile.remove_annotation = function(callbackFunction, idCorpus, idMedia, idLayer, idAnnotation){
-		this.del(route(idCorpus, idMedia, idLayer, idAnnotation), callbackFunction);
+		camomile.del(camomile.route(idCorpus, idMedia, idLayer, idAnnotation), callbackFunction);
 	}
 	return camomile;
 }();
-
