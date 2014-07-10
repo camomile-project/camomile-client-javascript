@@ -3,7 +3,7 @@
  */
 
 camomile = function(){
-	var adresse = ""
+	var adresse = "";
 	
 	/**
 	 * Description
@@ -24,7 +24,7 @@ camomile = function(){
 	 */
 	camomile.login = function(callbackFunction, username, password, adr) {
 		// log
-		adresse= adr
+		adresse = adr
 		var data = {};
 		data.username = username;
 		data.password = password;
