@@ -24,7 +24,7 @@ camomile = function(){
 	 */
 	camomile.login = function(callbackFunction, username, password, adr) {
 		// log
-		adresse = adr
+		adresse = adr;
 		var data = {};
 		data.username = username;
 		data.password = password;
@@ -106,7 +106,7 @@ camomile = function(){
 					withCredentials: true
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
-					camomile.error(jqXHR.status);
+					camomile.error(jqXHR.status, errorThrown, textStatus);
                 }
             }
         );
@@ -187,7 +187,7 @@ camomile = function(){
 					withCredentials: true
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
-					camomile.error(jqXHR.status);
+					camomile.error(jqXHR.status, errorThrown, textStatus);
                 }
             }
         );
@@ -447,7 +447,7 @@ camomile = function(){
 	 * @return data
 	 */
 	camomile.layer = function(layertype, fragmenttype, datatype, source){
-		var data = {}
+		var data = {};
 		data.layer_type = layertype;
 		data.fragment_type = fragmenttype;
 		data.data_type = datatype;
