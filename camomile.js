@@ -3,10 +3,10 @@
  */
 
 camomile = function(){
-	var adresse = "";
+	var adresse = ""
 	
 	/**
-	 * Description
+	 * Constructeur
 	 * @method camomile
 	 * @return 
 	 */
@@ -24,7 +24,7 @@ camomile = function(){
 	 */
 	camomile.login = function(callbackFunction, username, password, adr) {
 		// log
-		adresse = adr;
+		adresse= adr
 		var data = {};
 		data.username = username;
 		data.password = password;
@@ -73,7 +73,7 @@ camomile = function(){
 					callbackFunction(data);
                 },
                 crossDomain: true,
-                //dataType: 'json', // Format of the answer
+                //dataType: 'json', // Format of the answer -> Mettre quand le serveur sera effectivement JSON tout le temps
                 xhrFields: {
 					withCredentials: true
                 },
@@ -101,12 +101,12 @@ camomile = function(){
 					callbackFunction(data);
                 },
                 crossDomain: true,
-                //dataType: 'json',  // Format of the answer
+                //dataType: 'json',  // Format of the answer -> Mettre quand le serveur sera effectivement JSON tout le temps
                 xhrFields: {
 					withCredentials: true
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
-					camomile.error(jqXHR.status, errorThrown, textStatus);
+					camomile.error(jqXHR.status);
                 }
             }
         );
@@ -132,7 +132,7 @@ camomile = function(){
 						callbackFunction(data);
                     },
                     crossDomain: true,
-                    //dataType: 'json',  // Format of the answer
+                    //dataType: 'json',  // Format of the answer -> Mettre quand le serveur sera effectivement JSON tout le temps
                     xhrFields: {
 						withCredentials: true
                     },
@@ -150,7 +150,7 @@ camomile = function(){
 						callbackFunction(data);
                     },
                     crossDomain: true,
-                    //dataType: 'json',  // Format of the answer
+                    //dataType: 'json',  // Format of the answer -> Mettre quand le serveur sera effectivement JSON tout le temps
                     xhrFields: {
 						withCredentials: true
                     },
@@ -182,12 +182,12 @@ camomile = function(){
 					callbackFunction(data);
                 },
                 crossDomain: true,
-                //dataType: 'json',  // Format of the answer
+                //dataType: 'json',  // Format of the answer -> Mettre quand le serveur sera effectivement JSON tout le temps
                 xhrFields: {
 					withCredentials: true
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
-					camomile.error(jqXHR.status, errorThrown, textStatus);
+					camomile.error(jqXHR.status);
                 }
             }
         );
@@ -447,7 +447,7 @@ camomile = function(){
 	 * @return data
 	 */
 	camomile.layer = function(layertype, fragmenttype, datatype, source){
-		var data = {};
+		var data = {}
 		data.layer_type = layertype;
 		data.fragment_type = fragmenttype;
 		data.data_type = datatype;
@@ -596,7 +596,7 @@ camomile = function(){
 	 * @param String idLayer
 	 * @param String idAnnotation
 	 * @param String frag
-	 * @param String dat
+	 * @param String dat // Forme : "[1, 2, 3, …]"
 	 * @return 
 	 */
 	camomile.set_annotation = function(callbackFunction, idCorpus, idMedia, idLayer, idAnnotation, frag, dat){
