@@ -21,3 +21,7 @@
   camomile.createCorpus(...);
 
 ```
+
+## Documentation
+
+Will be available at http://camomile-project.github.io/camomile-server/ 
