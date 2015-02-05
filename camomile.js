@@ -281,7 +281,16 @@ var camomile = (function (fermata) {
     // MEDIA
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    my.getMedia = function(medium, corpus, name, callback) {
+    // Get medium by ID
+    my.getMedium = function(medium, callback) {
+        callback = callback || default_callback;
+        params = {}
+        
+        _media(medium)(params).get(callback);
+    };
+
+    // Get list of media
+    my.getMedia = function(corpus, name, callback) {
         callback = callback || default_callback;
 
         params = {}
@@ -290,7 +299,7 @@ var camomile = (function (fermata) {
         if (corpus) {
             _corpus(corpus)('media')(params).get(callback);
         } else {
-            _media(medium)(params).get(callback);
+            _media()(params).get(callback);
         };       
 
     };
