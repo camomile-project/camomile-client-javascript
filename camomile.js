@@ -333,6 +333,11 @@ var camomile = (function (fermata) {
     // LAYERS
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    my.getLayer = function(callback) {
+        callback = callback || default_callback;
+
+    };
+
     my.getLayers = function(callback) {
         callback = callback || default_callback;
 
