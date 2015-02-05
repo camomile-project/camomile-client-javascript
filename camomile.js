@@ -362,6 +362,11 @@ var camomile = (function (fermata) {
     // ANNOTATIONS
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    my.getAnnotation = function(callback) {
+        callback = callback || default_callback;
+
+    };
+
     my.getAnnotations = function(callback) {
         callback = callback || default_callback;
 
