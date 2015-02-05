@@ -430,6 +430,11 @@ var camomile = (function (fermata) {
     // QUEUES
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    my.getQueue = function(callback) {
+        callback = callback || default_callback;
+
+    };
+
     my.getQueues = function(callback) {
         callback = callback || default_callback;
 
