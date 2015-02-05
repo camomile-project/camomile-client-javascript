@@ -232,15 +232,26 @@ var camomile = (function (fermata) {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // CORPORA
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    // Get corpus by ID
+    my.getCorpus = function(corpus, history, callback) {
+        callback = callback || default_callback;
 
-    my.getCorpora = function(corpus, name, history, callback) {
+        params = {}
+        params.history = history || 'off';
+
+        _corpus(corpus)(params).get(callback);
+    }
+
+    // Get list of corpora
+    my.getCorpora = function(name, history, callback) {
         callback = callback || default_callback;
 
         params = {}
         params.history = history || 'off';
         if (name) { params.name = name; }
 
-        _corpus(corpus)(params).get(callback);
+        _corpus()(params).get(callback);
     }
 
     my.createCorpus = function(name, description, callback) {
