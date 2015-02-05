@@ -118,7 +118,14 @@ var camomile = (function (fermata) {
     // USERS
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    my.getUsers = function(user, username, callback) {
+    my.getUser = function(user, callback) {
+        callback = callback || default_callback;
+
+        _user(user).get(callback);
+    };
+
+
+    my.getUsers = function(username, callback) {
         callback = callback || default_callback;
 
         params = {}
@@ -126,9 +133,7 @@ var camomile = (function (fermata) {
             params.username = username;
         }
 
-        // if (returns_id) { callback = _ID(callback); }
-
-        _user(user)(params).get(callback);
+        _user()(params).get(callback);
     };
 
     my.createUser = function(username, password, description, role, callback) {
