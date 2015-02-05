@@ -174,7 +174,13 @@ var camomile = (function (fermata) {
     // GROUPS
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    my.getGroups = function(group, name, callback) {
+    my.getGroup = function(group, callback) {
+        callback = callback || default_callback;
+        
+        _group(group).get(callback);
+    };
+
+    my.getGroups = function(name, callback) {
         callback = callback || default_callback;
         
         params = {}
@@ -182,7 +188,7 @@ var camomile = (function (fermata) {
             params.name = name;
         }
 
-        _group(group)(params).get(callback);
+        _group()(params).get(callback);
     };
 
     my.createGroup = function(name, description, callback) {
