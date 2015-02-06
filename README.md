@@ -14,8 +14,9 @@
 
 ```javascript
   
-  camomile.login('username', 'password', 'http://camomile.fr/api' [, callback]);
-  camomile.logout();
+  camomile.setURL('http://camomile.fr/api')
+  camomile.login('username', 'password', callback);
+  camomile.logout(callback);
 
   camomile.getCorpora(callback);
   camomile.createCorpus(...);
