@@ -1,620 +1,692 @@
-/* 
- * Gestion des requetes au serveur
- */
 
-camomile = function(){
-	var adresse = ""
-	
-	/**
-	 * Constructeur
-	 * @method camomile
-	 * @return 
-	 */
-	function camomile(){
-	}
-	
-	/**
-	 * Login 
-	 * @method login
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String username
-	 * @param String password
-	 * @param String adr
-	 * @return 
-	 */
-	camomile.login = function(callbackFunction, username, password, adr) {
-		// log
-		adresse= adr
-		var data = {};
-		data.username = username;
-		data.password = password;
-		camomile.post("/login", data, callbackFunction);
-	}
-    
-    
-	/**
-	 * Logout 
-	 * @method logout
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @return 
-	 */
-	camomile.logout = function(callbackFunction) {
-		camomile.post("/logout", null, callbackFunction);
-	}
-    
-    
-	/**
-	 * Popup error 
-	 * @method error
-	 * @param int status
-	 * @param String errorThrown
-	 * @param String textStatus
-	 * @return 
-	 */
-	camomile.error = function(status, errorThrown, textStatus){
-		console.log(status, errorThrown, textStatus);
-		alert(textStatus + " " + status +" : " + errorThrown);
-		// Pourrait etre etoffe 
-	}
-    
-	/**
-	 * Get 
-	 * @method get
-	 * @param String route
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @return 
-	 */
-	camomile.get = function(route, callbackFunction){
-		$j.ajax(
-			{
-                url: adresse + route,
-                type: 'GET',
-                success: function(data) {
-					callbackFunction(data);
-                },
-                crossDomain: true,
-                //dataType: 'json', // Format of the answer -> Mettre quand le serveur sera effectivement JSON tout le temps
-                xhrFields: {
-					withCredentials: true
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-					camomile.error(jqXHR.status, errorThrown, textStatus);
-                }
-            }
-        );
-	}
-    
-    
-	/**
-	 * Delete 
-	 * @method del
-	 * @param String route
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @return 
-	 */
-	camomile.del = function(route, callbackFunction){
-		$j.ajax(
-			{
-                url:  adresse + route,
-                type: 'DELETE',
-                success: function(data) {
-					callbackFunction(data);
-                },
-                crossDomain: true,
-                //dataType: 'json',  // Format of the answer -> Mettre quand le serveur sera effectivement JSON tout le temps
-                xhrFields: {
-					withCredentials: true
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-					camomile.error(jqXHR.status);
-                }
-            }
-        );
-	}
-    
-	/**
-	 * Post 
-	 * @method post
-	 * @param String route
-	 * @param JSON data
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @return 
-	 */
-	camomile.post = function(route, data, callbackFunction){
-		if (data != null){ // For request as login
-			$j.ajax(
-				{
-                    url:  adresse + route,
-                    type: 'POST',
-                    data: JSON.stringify(data),
-                    contentType: 'application/json',
-                    success: function(data) {
-						callbackFunction(data);
-                    },
-                    crossDomain: true,
-                    //dataType: 'json',  // Format of the answer -> Mettre quand le serveur sera effectivement JSON tout le temps
-                    xhrFields: {
-						withCredentials: true
-                    },
-                    error: function(jqXHR, textStatus, errorThrown) {
-				    	camomile.error(jqXHR.status, errorThrown, textStatus);
-                    }
-                }
-            );
-		} else { // For request as logout
-			$j.ajax(
-				{
-                    url:  adresse + route,
-                    type: 'POST',
-                    success: function(data) {
-						callbackFunction(data);
-                    },
-                    crossDomain: true,
-                    //dataType: 'json',  // Format of the answer -> Mettre quand le serveur sera effectivement JSON tout le temps
-                    xhrFields: {
-						withCredentials: true
-                    },
-                    error: function(jqXHR, textStatus, errorThrown) {
-						camomile.error(jqXHR.status, errorThrown, textStatus);
-                    }
-                }
-            );
-		}
-	}
-    
-    
-	/**
-	 * Put 
-	 * @method put
-	 * @param String route
-	 * @param JSON data
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @return 
-	 */
-	camomile.put = function(route, data, callbackFunction){
-		$j.ajax(
-			{
-                url:  adresse + route,
-                type: 'PUT',
-                data: JSON.stringify(data),
-                contentType: 'application/json',
-                success: function(data) {
-					callbackFunction(data);
-                },
-                crossDomain: true,
-                //dataType: 'json',  // Format of the answer -> Mettre quand le serveur sera effectivement JSON tout le temps
-                xhrFields: {
-					withCredentials: true
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-					camomile.error(jqXHR.status);
-                }
-            }
-        );
-	}
-    
-	/**
-	 * Create User 
-	 * @method create_user
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String name
-	 * @param String password
-	 * @param String affiliation
-	 * @return 
-	 */
-	camomile.create_user = function(callbackFunction, name, password, affiliation){
-		var data = {};
-		data.username = name;
-		data.password = password;
-		data.affiliation = affiliation;
-		camomile.post("/user", data, callbackFunction);
-	}
-    
-	/**
-	 * See All User 
-	 * @method all_user
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @return 
-	 */
-	camomile.all_user = function(callbackFunction){
-		camomile.get("/user", callbackFunction);
-	}
-    
-    
-	/**
-	 * Get ACL for an element 
-	 * @method get_ACL
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String idCorpus
-	 * @param String idMedia
-	 * @param String idLayer
-	 * @param String idAnnotation
-	 * @return 
-	 */
-	camomile.get_ACL = function(callbackFunction, idCorpus, idMedia, idLayer, idAnnotation){
-		camomile.get((route(idCorpus, idMedia, idLayer, idAnnotation) + "/acl"), callbackFunction);
-	}
-    
-	/**
-	 * Set ACL for an element 
-	 * @method set_ACL
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String un
-	 * @param String ur
-	 * @param String idCorpus
-	 * @param String idMedia
-	 * @param String idLayer
-	 * @param String idAnnotation
-	 * @return 
-	 */
-	camomile.set_ACL = function(callbackFunction, username, userright, idCorpus, idMedia, idLayer, idAnnotation){
-		var data = {};
-		data.username = username;
-		data.userright = userright;
-		camomile.put((route(idCorpus, idMedia, idLayer, idAnnotation) + "/acl"), data, callbackFunction);
-	}
-    
-    
-	/**
-	 * Route builder 
-	 * @method route
-	 * @param String idCorpus
-	 * @param String idMedia
-	 * @param String idLayer
-	 * @param String idAnnotation
-	 * @return url
-	 */
-	camomile.route = function(idCorpus, idMedia, idLayer, idAnnotation){
-		var url = "";
-		if(idCorpus != null){
-			url += "/corpus/" + idCorpus;
-			if(idMedia != null){
-				url += "/media/" + idMedia;
-				if(idLayer != null){
-					url += "/layer/" + idLayer;
-					if(idAnnotation != null){
-						url += "/annotation/" + idAnnotation;
-					}
-				}
-			}
-		}
-		return url;
-	}
-    
-	/************/
-	/** CORPUS **/
-	/************/
-    
-	/**
-	 * Corpus builder 
-	 * @method corpus
-	 * @param String name
-	 * @return data
-	 */
-	camomile.corpus = function(name){
-		var data = {};
-		data.name = name;
-		return data;
-	}
-	/**
-	 * Get all corpus 
-	 * @method getCorpus
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @return 
-	 */
-	camomile.getCorpus = function(callbackFunction){
-		camomile.get("/corpus", callbackFunction);
-	}
-    
-	/**
-	 * Get corpus by name 
-	 * @method corpusById
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String idCorpus
-	 * @return 
-	 */
-	camomile.corpusById = function(callbackFunction, idCorpus){
-		camomile.get(camomile.route(idCorpus), callbackFunction);
-	}
-    
-	/**
-	 * New corpus 
-	 * @method create_corpus
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String name
-	 * @return 
-	 */
-	camomile.create_corpus = function(callbackFunction, name){
-		camomile.post("/corpus", camomile.corpus(name), callbackFunction);
-	}
-    
-	/**
-	 * Set Corpus 
-	 * @method set_corpus
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String idCorpus
-	 * @param String name
-	 * @return 
-	 */
-	camomile.set_corpus = function(callbackfunction, idCorpus, name){
-		camomile.put(camomile.route(idCorpus), camomile.corpus(name), callbackfunction);
-	}
-    
-	/**
-	 * Remove Corpus
-	 * @method remove_corpus
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String idCorpus
-	 * @return 
-	 */
-	camomile.remove_corpus = function(callbackFunction, idCorpus){
-		camomile.del(camomile.route(idCorpus), callbackFunction);
-        
-	}
-    
-	/***********/
-	/** MEDIA **/
-	/***********/
-    
-	/**
-	 * Media builder 
-	 * @method media
-	 * @param String name
-	 * @param String url
-	 * @return data
-	 */
-	camomile.media = function(name, url){
-		var data = {};
-		data.name = name;
-		data. url = url;
-		return data;
-	}
-    
-	/**
-	 * Get all media 
-	 * @method getMedias
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String idCorpus
-	 * @return 
-	 */
-	camomile.getMedias = function(callbackFunction, idCorpus){
-		camomile.get(camomile.route(idCorpus) + "/media", callbackFunction);
-	}
-    
-	/**
-	 * Get media by name 
-	 * @method mediaById
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String idCorpus
-	 * @param String idMedia
-	 * @return 
-	 */
-	camomile.mediaById = function(callbackFunction, idCorpus, idMedia ){
-		camomile.get(camomile.route(idCorpus, idMedia) , callbackFunction);
-	}
-    
-	/**
-	 * New Media 
-	 * @method create_media
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String idCorpus
-	 * @param String name
-	 * @param String url
-	 * @return 
-	 */
-	camomile.create_media = function(callbackFunction, idCorpus, name, url){
-		camomile.post(camomile.route(idCorpus) + "/media", camomile.media(name, url), callbackFunction);
-	}
-    
-	/**
-	 * Set Media 
-	 * @method set_media
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String idCorpus
-	 * @param String idMedia
-	 * @param String name
-	 * @param String url
-	 * @return 
-	 */
-	camomile.set_media = function(callbackFunction, idCorpus, idMedia, name, url){
-		camomile.put(camomile.route(idCorpus, idMedia), camomille.media(name, url), callbackFunction);
-	}
-    
-	/**
-	 * Remove Media
-	 * @method remove_media
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String idCorpus
-	 * @param String idMedia
-	 * @return 
-	 */
-	camomile.remove_media = function(callbackFunction, idCorpus, idMedia){
-		camomile.del(camomile.route(idCorpus, idMedia), callbackFunction);
-        
-	}
-    
-	/***********/
-	/** LAYER **/
-	/***********/
-    
-	/**
-	 * Layer builder 
-	 * @method layer
-	 * @param String layertype
-	 * @param String fragmenttype
-	 * @param String datatype
-	 * @param String source
-	 * @return data
-	 */
-	camomile.layer = function(layertype, fragmenttype, datatype, source){
-		var data = {}
-		data.layer_type = layertype;
-		data.fragment_type = fragmenttype;
-		data.data_type = datatype;
-		data.source = source;
-		return data;
-	}
-	/**
-	 * Get all layer 
-	 * @method getLayers
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String idCorpus
-	 * @param String idMedia
-	 * @return 
-	 */
-	camomile.getLayers = function(callbackFunction, idCorpus, idMedia){
-		camomile.get(camomile.route(idCorpus, idMedia) + "/layer", callbackFunction);
-	}
-    
-	/**
-	 * Get Layer by name 
-	 * @method layerById
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String idCorpus
-	 * @param String idMedia
-	 * @param String idLayer
-	 * @return 
-	 */
-	camomile.layerById = function(callbackFunction, idCorpus, idMedia, idLayer){
-		camomile.get(camomile.route(idCorpus, idMedia, idLayer), callbackFunction);
-	}
-    
-	/**
-	 * New Layer 
-	 * @method create_layer
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String idCorpus
-	 * @param String idMedia
-	 * @param String layertyp
-	 * @param String fragmenttyp
-	 * @param String datatyp
-	 * @param String source
-	 * @return 
-	 */
-	camomile.create_layer = function(callbackFunction, idCorpus, idMedia, layertyp, fragmenttyp, datatyp, source){
-		camomile.post(camomile.route(idCorpus, idMedia) + "/layer", camomile.layer(layertyp, fragmenttyp, datatyp, source), callbackFunction);
-	}
-    
-	/**
-	 * Set Layer 
-	 * @method set_layer
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String idCorpus
-	 * @param String idMedia
-	 * @param String idLayer
-	 * @param String layertyp
-	 * @param String fragtyp
-	 * @param String datatyp
-	 * @param String source
-	 * @return 
-	 */
-	camomile.set_layer = function(callbackFunction, idCorpus, idMedia, idLayer, layertyp, fragtyp, datatyp, source){
-		camomile.put(camomile.route(idCorpus, idMedia, idLayer), camomile.layer(layertyp, fragtyp, datatyp, source), callbackFunction);
-	}
-    
-	/**
-	 * Remove Layer
-	 * @method remove_layer
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String idCorpus
-	 * @param String idMedia
-	 * @param String idLayer
-	 * @param String callbackFunction
-	 * @return 
-	 */
-	camomile.remove_layer = function(callbackFunction, idCorpus, idMedia, idLayer, callbackFunction){
-		camomile.del(camomile.route(idCorpus, idMedia, idLayer), callbackFunction);
-        
-	}
-    
-	/****************/
-	/** ANNOTATION **/
-	/****************/
-    
-	/**
-	 * Annotation builder 
-	 * @method annotation
-	 * @param String fragmenttyp
-	 * @param String datatyp
-	 * @return data
-	 */
-	camomile.annotation = function(frag, dat){
-		var data = {};
-		data.fragment = frag;
-		data.data = dat;
-		return data;
-	}
-    
-	/**
-	 * Get all Annotation 
-	 * @method getAnnotations
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String idCorpus
-	 * @param String idMedia
-	 * @param String idLayer
-	 * @return 
-	 */
-	camomile.getAnnotations = function(callbackFunction, idCorpus, idMedia, idLayer){
-		camomile.get(camomile.route(idCorpus, idMedia, idLayer) + "/annotation", callbackFunction);
-	}
-    
-	/**
-	 * Get Annotation by name 
-	 * @method annotationById
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String idCorpus
-	 * @param String idMedia
-	 * @param String idLayer
-	 * @param String idAnnotation
-	 * @return 
-	 */
-	camomile.annotationById = function(callbackFunction, idCorpus, idMedia, idLayer, idAnnotation){
-		camomile.get(camomile.route(idCorpus, idMedia, idLayer, idAnnotation), callbackFunction);
-	}
-    
-	/**
-	 * New Annotation 
-	 * @method create_annotation
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String idCorpus
-	 * @param String idMedia
-	 * @param String idLayer
-	 * @param String frag
-	 * @param String dat // Forme : "[1, 2, 3, …]"
-	 * @return 
-	 */
-	camomile.create_annotation = function(callbackFunction, idCorpus, idMedia, idLayer, frag, dat){
-		camomile.post(camomile.route(idCorpus, idMedia, idLayer) + "/annotation", camomile.annotation(frag, dat), callbackFunction);
-	}
-    
-	/**
-	 * Set Annotation
-	 * @method set_annotation
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String idCorpus
-	 * @param String idMedia
-	 * @param String idLayer
-	 * @param String idAnnotation
-	 * @param String frag
-	 * @param String dat // Forme : "[1, 2, 3, …]"
-	 * @return 
-	 */
-	camomile.set_annotation = function(callbackFunction, idCorpus, idMedia, idLayer, idAnnotation, frag, dat){
-		camomile.put(camomile.route(idCorpus, idMedia, idLayer, idAnnotation), camomile.annotation(frag, dat), callbackFunction);
-	}
-    
-	/**
-	 * Remove Annotation
-	 * @method remove_annotation
-	 * @param function callbackFunction(data) ou data sous format JSON
-	 * @param String idCorpus
-	 * @param String idMedia
-	 * @param String idLayer
-	 * @param String idAnnotation
-	 * @return 
-	 */
-	camomile.remove_annotation = function(callbackFunction, idCorpus, idMedia, idLayer, idAnnotation){
-		camomile.del(camomile.route(idCorpus, idMedia, idLayer, idAnnotation), callbackFunction);
-	}
-	return camomile;
-}();
+// QUICK DOCUMENTATION
+
+// Dealing With Resources (Corpora, Media, Layers, Annotations)
+
+// getResource -- Get one resource
+// Parameters: resource_id, callback, history 
+//      resource_id: string - resource MongoDB '_id'
+//      callback: function(err, data, headers)
+//      history: boolean - return resource history
+
+// getResources -- Get several resources
+// Parameters: callback, filters, history, returns_id
+//      callback: function(err, data, headers)
+//      filters: dict - filter resources by field
+//      history: boolean - return resource history
+//      returns_id: boolean - return resource._id instead of resource
+
+// createResource -- Create one resource
+// Parameters: [parent_id,] field-1, ... field-n, callback, returns_id
+//      parent_id: string - parent id (e.g. corpus ID for a medium)
+//      fields-i: object
+//      callback: function(err, data, headers)
+//      returns_id: boolean - return resource._id instead of resource
+
+// createResources -- Create several resources at once
+// Parameters: [parent_id,] resources, callback, returns_id
+//      parent_id: string - parent id (e.g. corpus ID for a medium)
+//      resources: list - list of resource objects
+//      callback: function(err, data, headers)
+//      returns_id: boolean - return resource._id instead of resource
+
+// deleteResource -- Delete one resource
+// Parameters: resource_id, callback
+//      resource_id: string - resource MongoDB '_id'
+//      callback: function(err, data, headers)
+
+// updateResource -- Update one resource:
+// Parameters: resource_id, fields, callback
+//      resource_id: string - resource MongoDB '_id'
+//      fields: dict - update provided fields
+//      callback: function(err, data, headers)
+
+// Dealing With Users and Groups
+// TODO: write documentation
+
+// Dealing With Queues
+// TODO: write documentation
+
+var camomile = (function (fermata) {
+
+  "use strict";
+
+  var my = {}, _api;
+
+  var default_callback = function (err, data) {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(data);
+    }
+  };
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // HELPER FUNCTIONS
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  var _user = function (id_user) {
+    var user = _api('user');
+    if (id_user) {
+      user = user(id_user);
+    }
+    return user;
+  };
+
+  var _group = function (id_group) {
+    var group = _api('group');
+    if (id_group) {
+      group = group(id_group);
+    }
+    return group;
+  };
+
+  var _corpus = function (id_corpus) {
+    var corpus = _api('corpus');
+    if (id_corpus) {
+      corpus = corpus(id_corpus);
+    }
+    return corpus;
+  };
+
+  var _media = function (id_media) {
+    var media = _api('media');
+    if (id_media) {
+      media = media(id_media);
+    }
+    return media;
+  };
+
+  var _layer = function (id_layer) {
+    var layer = _api('layer');
+    if (id_layer) {
+      layer = layer(id_layer);
+    }
+    return layer;
+  };
+
+  var _annotation = function (id_annotation) {
+    var annotation = _api('annotation');
+    if (id_annotation) {
+      annotation = annotation(id_annotation);
+    }
+    return annotation;
+  };
+
+  var _queue = function (id_queue) {
+    var queue = _api('queue');
+    if (id_queue) {
+      queue = queue(id_queue);
+    }
+    return queue;
+  };
+
+  var _id = function (result) {
+    if (Array.isArray(result)) {
+      return result.map(function (x) {return x._id; });
+    }
+    return result._id;
+  };
+
+  var _ID = function (callback) {
+    return function (err, data, headers) {
+      if (!err) { data = _id(data); }
+      callback(err, data, headers);
+    };
+  };
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // AUTHENTICATION
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  my.setURL = function (url) {
+    _api = fermata.json(url);
+    return my;
+  };
+
+  my.login = function (username, password, callback, url) {
+    callback = callback || default_callback;
+
+    if (url !== undefined) { my.setURL(url); }
+
+    var data = {};
+    data.username = username;
+    data.password = password;
+
+    _api('login').post(data, callback);
+  };
+
+  my.logout = function (callback) {
+    callback = callback || default_callback;
+
+    _api('logout').post({}, callback);
+  };
+
+  my.me = function (callback) {
+    callback = callback || default_callback;
+
+    _api('me').get(callback);
+  };
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // USERS
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  my.getUser = function (user, callback) {
+
+    callback = callback || default_callback;
+
+    _user(user).get(callback);
+  };
+
+
+  my.getUsers = function (callback, filters, returns_id) {
+    // Available filters: username, role
+
+    callback = callback || default_callback;
+    if (returns_id) { callback = _ID(callback); }
+
+    _user()(filters).get(callback);
+  };
+
+  my.createUser = function (username, password, description, role, callback, returns_id) {
+
+    callback = callback || default_callback;
+    if (returns_id) { callback = _ID(callback); }
+
+    var data = {};
+    data.username = username;
+    data.password = password;
+    data.description = description || {};
+    data.role = role || 'user';
+
+    _user().post(data, callback);
+  };
+
+  my.updateUser = function (user, fields, callback) {
+    // Updatable fields: password, description, role
+
+    callback = callback || default_callback;
+
+    var data = fields;
+    _user(user).put(data, callback);
+  };
+
+  my.deleteUser = function (user, callback) {
+
+    callback = callback || default_callback;
+
+    _user(user).delete(callback);
+  };
+
+  my.getUserGroups = function (user, callback, returns_id) {
+
+    callback = callback || default_callback;
+    if (returns_id) { callback = _ID(callback); }
+
+    _user(user)('group').get(callback);
+  };
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // GROUPS
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  my.getGroup = function (group, callback) {
+
+    callback = callback || default_callback;
+
+    _group(group).get(callback);
+  };
+
+  my.getGroups = function (callback, filters, returns_id) {
+    // Available filters: name
+
+    callback = callback || default_callback;
+    if (returns_id) { callback = _ID(callback); }
+
+    filters = filters || {};
+
+    _group()(filters).get(callback);
+  };
+
+  my.createGroup = function (name, description, callback, returns_id) {
+
+    callback = callback || default_callback;
+    if (returns_id) { callback = _ID(callback); }
+
+    var data = {};
+    data.name = name;
+    data.description = description || {};
+
+    _group().post(data, callback);
+  };
+
+  my.updateGroup = function (group, fields, callback) {
+    // Updatable fields: description
+
+    callback = callback || default_callback;
+
+    var data = fields;
+    _group(group).put(data, callback);
+  };
+
+  my.deleteGroup = function (group, callback) {
+
+    callback = callback || default_callback;
+
+    _group(group).delete(callback);
+  };
+
+  my.addUserToGroup = function (user, group, callback) {
+
+    callback = callback || default_callback;
+
+    _group(group)('user')(user).put(callback);
+  };
+
+  my.removeUserFromGroup = function (user, group, callback) {
+
+    callback = callback || default_callback;
+
+    _group(group)('user')(user).delete(callback);
+  };
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // CORPORA
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  // Get corpus by ID
+  my.getCorpus = function (corpus, callback, history) {
+
+    callback = callback || default_callback;
+
+    var filters = {};
+    filters.history = history || 'off';
+
+    _corpus(corpus)(filters).get(callback);
+  };
+
+  // Get list of corpora
+  my.getCorpora = function (callback, filters, history, returns_id) {
+    // Available filters: name
+
+    callback = callback || default_callback;
+    if (returns_id) { callback = _ID(callback); }
+
+    filters = filters || {};
+    filters.history = history || 'off';
+
+    _corpus()(filters).get(callback);
+  };
+
+  my.createCorpus = function (name, description, callback, returns_id) {
+
+    callback = callback || default_callback;
+    if (returns_id) { callback = _ID(callback); }
+
+    var data = {};
+    data.name = name;
+    data.description = description || {};
+
+    _corpus().post(data, callback);
+  };
+
+  my.updateCorpus = function (corpus, fields, callback) {
+    // Updatable fields: name?, descrption
+
+    callback = callback || default_callback;
+
+    fields = fields || {};
+    _corpus(corpus).put(fields, callback);
+  };
+
+  my.deleteCorpus = function (corpus, callback) {
+
+    callback = callback || default_callback;
+
+    _corpus(corpus).delete(callback);
+  };
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // MEDIA
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  // Get medium by ID
+  my.getMedium = function (medium, callback, history) {
+
+    callback = callback || default_callback;
+
+    var filters = {};
+    filters.history = history || 'off';
+
+    _media(medium)(filters).get(callback);
+  };
+
+  // Get list of media
+  my.getMedia = function (callback, filters, history, returns_id) {
+    // Available filters: corpus, name
+
+    callback = callback || default_callback;
+    if (returns_id) { callback = _ID(callback); }
+
+    filters = filters || {};
+    filters.history = history || 'off';
+
+    if (filters.corpus !== undefined) {
+      _corpus(filters.corpus)('media')(filters).get(callback);
+    } else {
+      _media()(filters).get(callback);
+    }
+
+  };
+
+  my.createMedium = function (corpus, name, url, description, callback, returns_id) {
+
+    callback = callback || default_callback;
+    if (returns_id) { callback = _ID(callback); }
+
+    var data = {};
+    data.name = name;
+    data.url = url;
+    data.description = description || {};
+
+    _corpus(corpus)('media').post(data, callback);
+
+  };
+
+  my.createMedia = function (corpus, media, callback, returns_id) {
+
+    callback = callback || default_callback;
+    if (returns_id) { callback = _ID(callback); }
+
+    _corpus(corpus)('media').post(media, callback);
+  };
+
+  my.updateMedium = function (medium, fields, callback) {
+    // Updatable fields: name?, url, description
+
+    callback = callback || default_callback;
+
+    _media(medium).put(fields, callback);
+  };
+
+  my.deleteMedium = function (medium, callback) {
+
+    callback = callback || default_callback;
+
+    _media(medium).delete(medium, callback);
+  };
+
+  /*
+  my.streamMedium = function (medium, callback, format) {
+
+    callback = callback || default_callback;
+
+    format = format || 'video';
+
+    _media(medium)(format).get(callback):
+  };
+  */
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // LAYERS
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  // Get layer by ID
+  my.getLayer = function (layer, callback) {
+
+    callback = callback || default_callback;
+
+    _layer(layer).get(callback);
+  };
+
+  // Get list of layers
+  my.getLayers = function (callback, filters, history, returns_id) {
+    // Available filters: corpus, name
+
+    callback = callback || default_callback;
+    if (returns_id) { callback = _ID(callback); }
+
+    filters = filters || {};
+    filters.history = history || 'off';
+
+    if (filters.corpus !== undefined) {
+      _corpus(filters.corpus)('layer')(filters).get(callback);
+    } else {
+      _layer()(filters).get(callback);
+    }
+
+  };
+
+  my.createLayer = function (corpus, name, description, fragment_type, data_type, annotations, callback, returns_id) {
+
+    callback = callback || default_callback;
+    if (returns_id) { callback = _ID(callback); }
+
+    var data = {};
+    data.name = name;
+    data.description = description || {};
+    data.fragment_type = fragment_type;
+    data.data_type = data_type;
+    data.annotations = annotations || [];
+
+    _corpus(corpus)('layer').post(data, callback);
+
+  };
+
+  my.updateLayer = function (layer, fields, callback) {
+    // Updatable fields: name?, description, fragment_type, data_type
+
+    callback = callback || default_callback;
+
+    _layer(layer).put(fields, callback);
+
+  };
+
+  my.deleteLayer = function (layer, callback) {
+
+    callback = callback || default_callback;
+
+    _layer(layer).delete(callback);
+  };
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // ANNOTATIONS
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  my.getAnnotation = function (annotation, callback, history) {
+
+    callback = callback || default_callback;
+
+    var filters = {};
+    filters.history = history || 'off';
+
+    _annotation(annotation)(filters).get(callback);
+  };
+
+  my.getAnnotations = function (callback, filters, history, returns_id) {
+    // Available filters: layer, medium
+
+    callback = callback || default_callback;
+    if (returns_id) { callback = _ID(callback); }
+
+    filters = filters || {};
+    filters.history = history || 'off';
+
+    if (filters.layer !== undefined) {
+      _layer(filters.layer)('annotation')(filters).get(callback);
+    } else {
+      _annotation()(filters).get(callback);
+    }
+
+  };
+
+  my.createAnnotation = function (layer, media, fragment, data, callback, returns_id) {
+
+    callback = callback || default_callback;
+    if (returns_id) { callback = _ID(callback); }
+
+    var _data = {};
+    _data.media = media;  // id_media?
+    _data.fragment = fragment || {};
+    _data.data = data || {};
+
+    _layer(layer)('annotation').post(_data, callback);
+
+  };
+
+  my.createAnnotations = function (layer, annotations, callback, returns_id) {
+
+    callback = callback || default_callback;
+    if (returns_id) { callback = _ID(callback); }
+
+    var data = annotations;
+    _layer(layer)('annotation').post(data, callback);
+
+  };
+
+  my.updateAnnotation = function (annotation, fields, callback) {
+    // Updatable fields: fragment, data
+
+    callback = callback || default_callback;
+
+    var data = fields;
+    _annotation(annotation).put(data, callback);
+
+  };
+
+  my.deleteAnnotation = function (annotation, callback) {
+
+    callback = callback || default_callback;
+
+    _annotation(annotation).delete(callback);
+
+  };
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // RIGHTS
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  my.getCorpusRights = function (corpus, callback) {
+
+    callback = callback || default_callback;
+
+    _corpus(corpus)('ACL').get(callback);
+
+  };
+
+  /*
+  my.setCorpusRights = function (callback) {
+    callback = callback || default_callback;
+
+  };
+
+  my.removeCorpusRights = function (callback) {
+    callback = callback || default_callback;
+
+  };
+  */
+
+  my.getLayerRights = function (layer, callback) {
+
+    callback = callback || default_callback;
+
+    _layer(layer)('ACL').get(callback);
+
+  };
+
+  /*
+  my.setLayerRights = function (callback) {
+    callback = callback || default_callback;
+
+  };
+
+  my.removeLayerRights = function (callback) {
+    callback = callback || default_callback;
+
+  };
+  */
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // QUEUES
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  my.getQueue = function (queue, callback) {
+
+    callback = callback || default_callback;
+
+    _queue(queue).get(callback);
+
+  };
+
+  my.getQueues = function (callback, returns_id) {
+
+    callback = callback || default_callback;
+    if (returns_id) { callback = _ID(callback); }
+
+    _queue().get(callback);
+
+  };
+
+  my.createQueue = function (name, description, callback, returns_id) {
+
+    callback = callback || default_callback;
+    if (returns_id) { callback = _ID(callback); }
+
+    var data = {};
+    data.name = name;
+    data.description = description || {};
+
+    _queue().post(data, callback);
+
+  };
+
+  my.updateQueue = function (queue, fields, callback) {
+    // Updatable fields: name, description
+
+    callback = callback || default_callback;
+
+    var data = fields;
+    _queue(queue).put(data, callback);
+
+  };
+
+  my.enqueue = function (queue, elements, callback) {
+
+    callback = callback || default_callback;
+
+    var data = elements;
+    _queue(queue)('next').put(data, callback);
+
+  };
+
+  my.dequeue = function (queue, callback) {
+
+    callback = callback || default_callback;
+
+    _queue(queue)('next').get(callback);
+
+  };
+
+  my.deleteQueue = function (queue, callback) {
+
+    callback = callback || default_callback;
+
+    _queue(queue).delete(callback);
+
+  };
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // UTILS
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  my.getDate = function (callback) {
+    callback = callback || default_callback;
+
+    _api('date').get(callback);
+  };
+
+
+  return my;
+
+}(fermata));
