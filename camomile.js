@@ -42,10 +42,10 @@
 //      callback: function(err, data, headers)
 
 // Dealing With Users and Groups
-// TODO
+// TODO: write documentation
 
 // Dealing With Queues
-// TODO
+// TODO: write documentation
 
 var camomile = (function (fermata) {
 
