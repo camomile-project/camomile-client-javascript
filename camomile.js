@@ -362,6 +362,13 @@ var camomile = (function (fermata) {
     _media(medium)(filters).get(callback);
   };
 
+  // Get medium URL, e.g. for use in <video> src attribute 
+  my.getMediumURL = function (medium, format) {
+
+    format = format || 'video';
+    return _media(medium)(format)();
+  };
+  
   // Get list of media
   my.getMedia = function (callback, filters, history, returns_id) {
     // Available filters: corpus, name
@@ -416,17 +423,6 @@ var camomile = (function (fermata) {
 
     _media(medium).delete(medium, callback);
   };
-
-  /*
-  my.streamMedium = function (medium, callback, format) {
-
-    callback = callback || default_callback;
-
-    format = format || 'video';
-
-    _media(medium)(format).get(callback):
-  };
-  */
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // LAYERS
