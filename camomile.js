@@ -368,7 +368,7 @@ var camomile = (function (fermata) {
     format = format || 'video';
     return _media(medium)(format)();
   };
-  
+
   // Get list of media
   my.getMedia = function (callback, filters, history, returns_id) {
     // Available filters: corpus, name
@@ -571,17 +571,35 @@ var camomile = (function (fermata) {
 
   };
 
-  /*
-  my.setCorpusRights = function (callback) {
+  my.setCorpusRightsForGroup = function (corpus, group, right, callback) {
+
     callback = callback || default_callback;
 
+    var data = {'right': right};
+    _corpus(corpus)('group')(group).put(data, callback);
   };
 
-  my.removeCorpusRights = function (callback) {
+  my.removeCorpusRightsForGroup = function (corpus, group, callback) {
+
     callback = callback || default_callback;
 
+    _corpus(corpus)('group')(group).delete(callback);
   };
-  */
+
+  my.setCorpusRightsForUser = function (corpus, user, right, callback) {
+
+    callback = callback || default_callback;
+
+    var data = {'right': right};
+    _corpus(corpus)('user')(user).put(data, callback);
+  };
+
+  my.removeCorpusRightsForUser = function (corpus, user, callback) {
+
+    callback = callback || default_callback;
+
+    _corpus(corpus)('user')(user).delete(callback);
+  };
 
   my.getLayerRights = function (layer, callback) {
 
@@ -591,17 +609,35 @@ var camomile = (function (fermata) {
 
   };
 
-  /*
-  my.setLayerRights = function (callback) {
+  my.setLayerRightsForGroup = function (layer, group, right, callback) {
+
     callback = callback || default_callback;
 
+    var data = {'right': right};
+    _layer(layer)('group')(group).put(data, callback);
   };
 
-  my.removeLayerRights = function (callback) {
+  my.removeLayerRightsForGroup = function (layer, group, callback) {
+
     callback = callback || default_callback;
 
+    _layer(layer)('group')(group).delete(callback);
   };
-  */
+
+  my.setLayerRightsForUser = function (layer, user, right, callback) {
+
+    callback = callback || default_callback;
+
+    var data = {'right': right};
+    _layer(layer)('user')(user).put(data, callback);
+  };
+
+  my.removeLayerRightsForUser = function (layer, user, callback) {
+
+    callback = callback || default_callback;
+
+    _layer(layer)('user')(user).delete(callback);
+  };
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // QUEUES
