@@ -53,7 +53,7 @@
   } else if (typeof exports === "object") {
     module.exports = factory(require("fermata"));
   } else {
-    root.camomile = factory(root.fermata);
+    root.Camomile = factory(root.fermata);
   }
 }(this, function (fermata) {
 
