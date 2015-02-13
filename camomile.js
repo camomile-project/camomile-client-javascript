@@ -47,7 +47,15 @@
 // Dealing With Queues
 // TODO: write documentation
 
-var camomile = (function (fermata) {
+(function (root, factory) {
+  if (typeof define === "function" && define.amd) {
+    define(["fermata"], factory);
+  } else if (typeof exports === "object") {
+    module.exports = factory(require("fermata"));
+  } else {
+    root.camomile = factory(root.fermata);
+  }
+}(this, function (fermata) {
 
   "use strict";
 
@@ -721,4 +729,4 @@ var camomile = (function (fermata) {
 
   return my;
 
-}(fermata));
+}));
