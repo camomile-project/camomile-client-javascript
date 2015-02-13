@@ -14,12 +14,12 @@
 
 ```javascript
   
-  camomile.setURL('http://camomile.fr/api')
-  camomile.login('username', 'password', callback);
-  camomile.logout(callback);
+  Camomile.setURL('http://camomile.fr/api')
+  Camomile.login('username', 'password', callback);
+  Camomile.logout(callback);
 
-  camomile.getCorpora(callback);
-  camomile.createCorpus(...);
+  Camomile.getCorpora(callback);
+  Camomile.createCorpus(...);
 
 ```
 

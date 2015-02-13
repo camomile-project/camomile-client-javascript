@@ -1,3 +1,8 @@
+### Version 0.3.0 (2015-02-13)
+
+  - BREAKING: renamed from camomile to Camomile
+  - feat: Universal Module Definition (UMD)
+
 ### Version 0.2.0 (2015-02-11)
 
   - feat: getMediumURLs returns URL to be used in <video> src attribute
