@@ -342,7 +342,7 @@
       callback = _ID(callback);
     }
 
-    filter = options.filter || {};
+    var filter = options.filter || {};
     filter.history = options.history || 'off';
 
     _corpus()(filter).get(callback);
