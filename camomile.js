@@ -552,7 +552,7 @@
   };
 
   my.getAnnotations = function (callback, options) {
-    // Available filters: layer, medium
+    // Available filters: id_layer, id_medium
 
     callback = callback || default_callback;
     options = options || {};
@@ -563,8 +563,8 @@
     var filter = options.filter || {};
     filter.history = options.history || 'off';
 
-    if (filter.layer !== undefined) {
-      _layer(filter.layer)('annotation')(filter).get(callback);
+    if (filter.id_layer !== undefined) {
+      _layer(filter.id_layer)('annotation')(filter).get(callback);
     } else {
       _annotation()(filter).get(callback);
     }
