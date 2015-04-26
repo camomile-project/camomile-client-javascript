@@ -404,7 +404,7 @@
 
   // Get list of media
   my.getMedia = function (callback, options) {
-    // Available filters: corpus, name
+    // Available filters: id_corpus, name
 
     callback = callback || default_callback;
     options = options || {};
@@ -415,8 +415,8 @@
     var filter = options.filter || {};
     filter.history = options.history || 'off';
 
-    if (filter.corpus !== undefined) {
-      _corpus(filter.corpus)('medium')(filter).get(callback);
+    if (filter.id_corpus !== undefined) {
+      _corpus(filter.id_corpus)('medium')(filter).get(callback);
     } else {
       _medium()(filter).get(callback);
     }
@@ -481,7 +481,7 @@
 
   // Get list of layers
   my.getLayers = function (callback, options) {
-    // Available filters: corpus, name
+    // Available filters: id_corpus, name
 
     callback = callback || default_callback;
     options = options || {};
@@ -492,8 +492,8 @@
     var filter = options.filter || {};
     filter.history = options.history || 'off';
 
-    if (filter.corpus !== undefined) {
-      _corpus(filter.corpus)('layer')(filter).get(callback);
+    if (filter.id_corpus !== undefined) {
+      _corpus(filter.id_corpus)('layer')(filter).get(callback);
     } else {
       _layer()(filter).get(callback);
     }
