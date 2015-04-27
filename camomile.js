@@ -647,7 +647,7 @@
 
     callback = callback || default_callback;
 
-    _corpus(corpus)('ACL').get(callback);
+    _corpus(corpus)('permissions').get(callback);
 
   };
 
@@ -689,7 +689,7 @@
 
     callback = callback || default_callback;
 
-    _layer(layer)('ACL').get(callback);
+    _layer(layer)('permissions').get(callback);
 
   };
 
