@@ -327,7 +327,9 @@
     options = options || {};
 
     var filter = {};
-    filter.history = options.history || 'off';
+    if (options.history) {
+      filter.history = options.history;
+    }
 
     _corpus(corpus)(filter).get(callback);
   };
@@ -343,7 +345,9 @@
     }
 
     var filter = options.filter || {};
-    filter.history = options.history || 'off';
+    if (options.history) {
+      filter.history = options.history;
+    }
 
     _corpus()(filter).get(callback);
   };
@@ -390,7 +394,9 @@
     options = options || {};
 
     var filter = {};
-    filter.history = options.history || 'off';
+    if (options.history) {
+      filter.history = options.history;
+    }
 
     _medium(medium)(filter).get(callback);
   };
@@ -413,7 +419,9 @@
     }
 
     var filter = options.filter || {};
-    filter.history = options.history || 'off';
+    if (options.history) {
+      filter.history = options.history;
+    }
 
     if (filter.id_corpus !== undefined) {
       filter.id_corpus = undefined;
@@ -491,7 +499,9 @@
     }
 
     var filter = options.filter || {};
-    filter.history = options.history || 'off';
+    if (options.history) {
+      filter.history = options.history;
+    }
 
     if (filter.id_corpus !== undefined) {
       filter.id_corpus = undefined;
@@ -548,7 +558,9 @@
     options = options || {};
 
     var filter = {};
-    filter.history = options.history || 'off';
+    if (options.history) {
+      filter.history = options.history;
+    }
 
     _annotation(annotation)(filter).get(callback);
   };
@@ -563,7 +575,9 @@
     }
 
     var filter = options.filter || {};
-    filter.history = options.history || 'off';
+    if (options.history) {
+      filter.history = options.history;
+    }
 
     if (filter.id_layer !== undefined) {
       filter.id_layer = undefined;
