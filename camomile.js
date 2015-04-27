@@ -425,7 +425,7 @@
 
     if (filter.id_corpus !== undefined) {
       var id_corpus = filter.id_corpus;
-      filter.id_corpus = undefined;
+      del filter.id_corpus;
       _corpus(id_corpus)('medium')(filter).get(callback);
     } else {
       _medium()(filter).get(callback);
@@ -506,7 +506,7 @@
 
     if (filter.id_corpus !== undefined) {
       var id_corpus = filter.id_corpus;
-      filter.id_corpus = undefined;
+      del filter.id_corpus;
       _corpus(id_corpus)('layer')(filter).get(callback);
     } else {
       _layer()(filter).get(callback);
@@ -583,7 +583,7 @@
 
     if (filter.id_layer !== undefined) {
       var id_layer = filter.id_layer;
-      filter.id_layer = undefined;
+      del filter.id_layer;
       _layer(id_layer)('annotation')(filter).get(callback);
     } else {
       _annotation()(filter).get(callback);
