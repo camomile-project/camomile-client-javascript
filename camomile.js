@@ -416,6 +416,7 @@
     filter.history = options.history || 'off';
 
     if (filter.id_corpus !== undefined) {
+      filter.id_corpus = undefined;
       _corpus(filter.id_corpus)('medium')(filter).get(callback);
     } else {
       _medium()(filter).get(callback);
@@ -493,6 +494,7 @@
     filter.history = options.history || 'off';
 
     if (filter.id_corpus !== undefined) {
+      filter.id_corpus = undefined;
       _corpus(filter.id_corpus)('layer')(filter).get(callback);
     } else {
       _layer()(filter).get(callback);
@@ -564,6 +566,7 @@
     filter.history = options.history || 'off';
 
     if (filter.id_layer !== undefined) {
+      filter.id_layer = undefined;
       _layer(filter.id_layer)('annotation')(filter).get(callback);
     } else {
       _annotation()(filter).get(callback);
