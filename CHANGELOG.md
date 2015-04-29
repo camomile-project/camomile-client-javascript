@@ -1,3 +1,7 @@
+### Version 0.5.0 (2015-04-29)
+
+  - major update for upcoming Camomile API v0.5
+
 ### Version 0.3.0 (2015-02-13)
 
   - BREAKING: renamed from camomile to Camomile
