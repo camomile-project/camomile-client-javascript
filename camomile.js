@@ -1,4 +1,3 @@
-
 // QUICK DOCUMENTATION
 
 // Dealing With Resources (Corpora, Media, Layers, Annotations)
@@ -59,7 +58,8 @@
 
   "use strict";
 
-  var my = {}, _api;
+  var my = {},
+    _api;
 
   var default_callback = function (err, data) {
     if (err) {
@@ -97,12 +97,12 @@
     return corpus;
   };
 
-  var _media = function (id_media) {
-    var media = _api('media');
-    if (id_media) {
-      media = media(id_media);
+  var _medium = function (id_medium) {
+    var medium = _api('medium');
+    if (id_medium) {
+      medium = medium(id_medium);
     }
-    return media;
+    return medium;
   };
 
   var _layer = function (id_layer) {
@@ -131,14 +131,18 @@
 
   var _id = function (result) {
     if (Array.isArray(result)) {
-      return result.map(function (x) {return x._id; });
+      return result.map(function (x) {
+        return x._id;
+      });
     }
     return result._id;
   };
 
   var _ID = function (callback) {
     return function (err, data, headers) {
-      if (!err) { data = _id(data); }
+      if (!err) {
+        data = _id(data);
+      }
       callback(err, data, headers);
     };
   };
@@ -152,10 +156,8 @@
     return my;
   };
 
-  my.login = function (username, password, callback, url) {
+  my.login = function (username, password, callback) {
     callback = callback || default_callback;
-
-    if (url !== undefined) { my.setURL(url); }
 
     var data = {};
     data.username = username;
@@ -176,6 +178,15 @@
     _api('me').get(callback);
   };
 
+  my.update_password = function (new_password, callback) {
+    callback = callback || default_callback;
+
+    var data = {};
+    data.password = new_password;
+
+    _api('me').put(data, callback);
+  };
+
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // USERS
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -187,20 +198,26 @@
     _user(user).get(callback);
   };
 
-
-  my.getUsers = function (callback, filters, returns_id) {
+  my.getUsers = function (callback, options) {
     // Available filters: username, role
 
     callback = callback || default_callback;
-    if (returns_id) { callback = _ID(callback); }
+    options = options || {};
+    if (options.returns_id) {
+      callback = _ID(callback);
+    }
 
-    _user()(filters).get(callback);
+    var filter = options.filter || {};
+    _user()(filter).get(callback);
   };
 
-  my.createUser = function (username, password, description, role, callback, returns_id) {
+  my.createUser = function (username, password, description, role, callback, options) {
 
     callback = callback || default_callback;
-    if (returns_id) { callback = _ID(callback); }
+    options = options || {};
+    if (options.returns_id) {
+      callback = _ID(callback);
+    }
 
     var data = {};
     data.username = username;
@@ -216,8 +233,8 @@
 
     callback = callback || default_callback;
 
-    var data = fields;
-    _user(user).put(data, callback);
+    fields = fields || {};
+    _user(user).put(fields, callback);
   };
 
   my.deleteUser = function (user, callback) {
@@ -227,10 +244,13 @@
     _user(user).delete(callback);
   };
 
-  my.getUserGroups = function (user, callback, returns_id) {
+  my.getUserGroups = function (user, callback, options) {
 
     callback = callback || default_callback;
-    if (returns_id) { callback = _ID(callback); }
+    options = options || {};
+    if (options.returns_id) {
+      callback = _ID(callback);
+    }
 
     _user(user)('group').get(callback);
   };
@@ -246,21 +266,27 @@
     _group(group).get(callback);
   };
 
-  my.getGroups = function (callback, filters, returns_id) {
+  my.getGroups = function (callback, options) {
     // Available filters: name
 
     callback = callback || default_callback;
-    if (returns_id) { callback = _ID(callback); }
+    options = options || {};
+    if (options.returns_id) {
+      callback = _ID(callback);
+    }
 
-    filters = filters || {};
+    var filter = options.filter || {};
 
-    _group()(filters).get(callback);
+    _group()(filter).get(callback);
   };
 
-  my.createGroup = function (name, description, callback, returns_id) {
+  my.createGroup = function (name, description, callback, options) {
 
     callback = callback || default_callback;
-    if (returns_id) { callback = _ID(callback); }
+    options = options || {};
+    if (options.returns_id) {
+      callback = _ID(callback);
+    }
 
     var data = {};
     data.name = name;
@@ -274,8 +300,8 @@
 
     callback = callback || default_callback;
 
-    var data = fields;
-    _group(group).put(data, callback);
+    fields = fields || {};
+    _group(group).put(fields, callback);
   };
 
   my.deleteGroup = function (group, callback) {
@@ -304,33 +330,44 @@
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   // Get corpus by ID
-  my.getCorpus = function (corpus, callback, history) {
+  my.getCorpus = function (corpus, callback, options) {
 
     callback = callback || default_callback;
+    options = options || {};
 
-    var filters = {};
-    filters.history = history || 'off';
+    var filter = {};
+    if (options.history) {
+      filter.history = options.history;
+    }
 
-    _corpus(corpus)(filters).get(callback);
+    _corpus(corpus)(filter).get(callback);
   };
 
   // Get list of corpora
-  my.getCorpora = function (callback, filters, history, returns_id) {
+  my.getCorpora = function (callback, options) {
     // Available filters: name
 
     callback = callback || default_callback;
-    if (returns_id) { callback = _ID(callback); }
+    options = options || {};
+    if (options.returns_id) {
+      callback = _ID(callback);
+    }
 
-    filters = filters || {};
-    filters.history = history || 'off';
+    var filter = options.filter || {};
+    if (options.history) {
+      filter.history = options.history;
+    }
 
-    _corpus()(filters).get(callback);
+    _corpus()(filter).get(callback);
   };
 
-  my.createCorpus = function (name, description, callback, returns_id) {
+  my.createCorpus = function (name, description, callback, options) {
 
     callback = callback || default_callback;
-    if (returns_id) { callback = _ID(callback); }
+    options = options || {};
+    if (options.returns_id) {
+      callback = _ID(callback);
+    }
 
     var data = {};
     data.name = name;
@@ -360,61 +397,77 @@
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   // Get medium by ID
-  my.getMedium = function (medium, callback, history) {
+  my.getMedium = function (medium, callback, options) {
 
     callback = callback || default_callback;
+    options = options || {};
 
-    var filters = {};
-    filters.history = history || 'off';
+    var filter = {};
+    if (options.history) {
+      filter.history = options.history;
+    }
 
-    _media(medium)(filters).get(callback);
+    _medium(medium)(filter).get(callback);
   };
 
   // Get medium URL, e.g. for use in <video> src attribute 
   my.getMediumURL = function (medium, format) {
 
     format = format || 'video';
-    return _media(medium)(format)();
+    return _medium(medium)(format)();
   };
 
   // Get list of media
-  my.getMedia = function (callback, filters, history, returns_id) {
-    // Available filters: corpus, name
+  my.getMedia = function (callback, options) {
+    // Available filters: id_corpus, name
 
     callback = callback || default_callback;
-    if (returns_id) { callback = _ID(callback); }
+    options = options || {};
+    if (options.returns_id) {
+      callback = _ID(callback);
+    }
 
-    filters = filters || {};
-    filters.history = history || 'off';
+    var filter = options.filter || {};
+    if (options.history) {
+      filter.history = options.history;
+    }
 
-    if (filters.corpus !== undefined) {
-      _corpus(filters.corpus)('media')(filters).get(callback);
+    if (filter.id_corpus !== undefined) {
+      var id_corpus = filter.id_corpus;
+      delete filter.id_corpus;
+      _corpus(id_corpus)('medium')(filter).get(callback);
     } else {
-      _media()(filters).get(callback);
+      _medium()(filter).get(callback);
     }
 
   };
 
-  my.createMedium = function (corpus, name, url, description, callback, returns_id) {
+  my.createMedium = function (corpus, name, url, description, callback, options) {
 
     callback = callback || default_callback;
-    if (returns_id) { callback = _ID(callback); }
+    options = options || {};
+    if (options.returns_id) {
+      callback = _ID(callback);
+    }
 
     var data = {};
     data.name = name;
     data.url = url;
     data.description = description || {};
 
-    _corpus(corpus)('media').post(data, callback);
+    _corpus(corpus)('medium').post(data, callback);
 
   };
 
-  my.createMedia = function (corpus, media, callback, returns_id) {
+  my.createMedia = function (corpus, media, callback, options) {
 
     callback = callback || default_callback;
-    if (returns_id) { callback = _ID(callback); }
+    options = options || {};
+    if (options.returns_id) {
+      callback = _ID(callback);
+    }
 
-    _corpus(corpus)('media').post(media, callback);
+    _corpus(corpus)('medium').post(media, callback);
   };
 
   my.updateMedium = function (medium, fields, callback) {
@@ -422,14 +475,15 @@
 
     callback = callback || default_callback;
 
-    _media(medium).put(fields, callback);
+    fields = fields || {};
+    _medium(medium).put(fields, callback);
   };
 
   my.deleteMedium = function (medium, callback) {
 
     callback = callback || default_callback;
 
-    _media(medium).delete(medium, callback);
+    _medium(medium).delete(medium, callback);
   };
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -445,27 +499,37 @@
   };
 
   // Get list of layers
-  my.getLayers = function (callback, filters, history, returns_id) {
-    // Available filters: corpus, name
+  my.getLayers = function (callback, options) {
+    // Available filters: id_corpus, name
 
     callback = callback || default_callback;
-    if (returns_id) { callback = _ID(callback); }
+    options = options || {};
+    if (options.returns_id) {
+      callback = _ID(callback);
+    }
 
-    filters = filters || {};
-    filters.history = history || 'off';
+    var filter = options.filter || {};
+    if (options.history) {
+      filter.history = options.history;
+    }
 
-    if (filters.corpus !== undefined) {
-      _corpus(filters.corpus)('layer')(filters).get(callback);
+    if (filter.id_corpus !== undefined) {
+      var id_corpus = filter.id_corpus;
+      delete filter.id_corpus;
+      _corpus(id_corpus)('layer')(filter).get(callback);
     } else {
-      _layer()(filters).get(callback);
+      _layer()(filter).get(callback);
     }
 
   };
 
-  my.createLayer = function (corpus, name, description, fragment_type, data_type, annotations, callback, returns_id) {
+  my.createLayer = function (corpus, name, description, fragment_type, data_type, annotations, callback, options) {
 
     callback = callback || default_callback;
-    if (returns_id) { callback = _ID(callback); }
+    options = options || {};
+    if (options.returns_id) {
+      callback = _ID(callback);
+    }
 
     var data = {};
     data.name = name;
@@ -483,6 +547,7 @@
 
     callback = callback || default_callback;
 
+    fields = fields || {};
     _layer(layer).put(fields, callback);
 
   };
@@ -498,40 +563,53 @@
   // ANNOTATIONS
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  my.getAnnotation = function (annotation, callback, history) {
+  my.getAnnotation = function (annotation, callback, options) {
 
     callback = callback || default_callback;
+    options = options || {};
 
-    var filters = {};
-    filters.history = history || 'off';
+    var filter = {};
+    if (options.history) {
+      filter.history = options.history;
+    }
 
-    _annotation(annotation)(filters).get(callback);
+    _annotation(annotation)(filter).get(callback);
   };
 
-  my.getAnnotations = function (callback, filters, history, returns_id) {
-    // Available filters: layer, medium
+  my.getAnnotations = function (callback, options) {
+    // Available filters: id_layer, id_medium
 
     callback = callback || default_callback;
-    if (returns_id) { callback = _ID(callback); }
+    options = options || {};
+    if (options.returns_id) {
+      callback = _ID(callback);
+    }
 
-    filters = filters || {};
-    filters.history = history || 'off';
+    var filter = options.filter || {};
+    if (options.history) {
+      filter.history = options.history;
+    }
 
-    if (filters.layer !== undefined) {
-      _layer(filters.layer)('annotation')(filters).get(callback);
+    if (filter.id_layer !== undefined) {
+      var id_layer = filter.id_layer;
+      delete filter.id_layer;
+      _layer(id_layer)('annotation')(filter).get(callback);
     } else {
-      _annotation()(filters).get(callback);
+      _annotation()(filter).get(callback);
     }
 
   };
 
-  my.createAnnotation = function (layer, media, fragment, data, callback, returns_id) {
+  my.createAnnotation = function (layer, medium, fragment, data, callback, options) {
 
     callback = callback || default_callback;
-    if (returns_id) { callback = _ID(callback); }
+    options = options || {};
+    if (options.returns_id) {
+      callback = _ID(callback);
+    }
 
     var _data = {};
-    _data.media = media;  // id_media?
+    _data.id_medium = medium;
     _data.fragment = fragment || {};
     _data.data = data || {};
 
@@ -539,10 +617,13 @@
 
   };
 
-  my.createAnnotations = function (layer, annotations, callback, returns_id) {
+  my.createAnnotations = function (layer, annotations, callback, options) {
 
     callback = callback || default_callback;
-    if (returns_id) { callback = _ID(callback); }
+    options = options || {};
+    if (options.returns_id) {
+      callback = _ID(callback);
+    }
 
     var data = annotations;
     _layer(layer)('annotation').post(data, callback);
@@ -554,8 +635,8 @@
 
     callback = callback || default_callback;
 
-    var data = fields;
-    _annotation(annotation).put(data, callback);
+    fields = fields || {};
+    _annotation(annotation).put(fields, callback);
 
   };
 
@@ -575,7 +656,7 @@
 
     callback = callback || default_callback;
 
-    _corpus(corpus)('ACL').get(callback);
+    _corpus(corpus)('permissions').get(callback);
 
   };
 
@@ -583,7 +664,9 @@
 
     callback = callback || default_callback;
 
-    var data = {'right': right};
+    var data = {
+      'right': right
+    };
     _corpus(corpus)('group')(group).put(data, callback);
   };
 
@@ -598,7 +681,9 @@
 
     callback = callback || default_callback;
 
-    var data = {'right': right};
+    var data = {
+      'right': right
+    };
     _corpus(corpus)('user')(user).put(data, callback);
   };
 
@@ -613,7 +698,7 @@
 
     callback = callback || default_callback;
 
-    _layer(layer)('ACL').get(callback);
+    _layer(layer)('permissions').get(callback);
 
   };
 
@@ -621,7 +706,9 @@
 
     callback = callback || default_callback;
 
-    var data = {'right': right};
+    var data = {
+      'right': right
+    };
     _layer(layer)('group')(group).put(data, callback);
   };
 
@@ -636,7 +723,9 @@
 
     callback = callback || default_callback;
 
-    var data = {'right': right};
+    var data = {
+      'right': right
+    };
     _layer(layer)('user')(user).put(data, callback);
   };
 
@@ -659,19 +748,25 @@
 
   };
 
-  my.getQueues = function (callback, returns_id) {
+  my.getQueues = function (callback, options) {
 
     callback = callback || default_callback;
-    if (returns_id) { callback = _ID(callback); }
+    options = options || {};
+    if (options.returns_id) {
+      callback = _ID(callback);
+    }
 
     _queue().get(callback);
 
   };
 
-  my.createQueue = function (name, description, callback, returns_id) {
+  my.createQueue = function (name, description, callback, options) {
 
     callback = callback || default_callback;
-    if (returns_id) { callback = _ID(callback); }
+    options = options || {};
+    if (options.returns_id) {
+      callback = _ID(callback);
+    }
 
     var data = {};
     data.name = name;
@@ -725,7 +820,6 @@
 
     _api('date').get(callback);
   };
-
 
   return my;
 
