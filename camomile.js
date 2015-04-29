@@ -178,6 +178,15 @@
     _api('me').get(callback);
   };
 
+  my.update_password = function (new_password, callback) {
+    callback = callback || default_callback;
+
+    var data = {};
+    data.password = new_password;
+
+    _api('me').put(data, callback);
+  };
+
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // USERS
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
