@@ -1,50 +1,24 @@
-// QUICK DOCUMENTATION
+// The MIT License (MIT)
 
-// Dealing With Resources (Corpora, Media, Layers, Annotations)
+// Copyright (c) 2014-2015 CAMOMILE project
 
-// getResource -- Get one resource
-// Parameters: resource_id, callback, history 
-//      resource_id: string - resource MongoDB '_id'
-//      callback: function(err, data, headers)
-//      history: boolean - return resource history
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
 
-// getResources -- Get several resources
-// Parameters: callback, filters, history, returns_id
-//      callback: function(err, data, headers)
-//      filters: dict - filter resources by field
-//      history: boolean - return resource history
-//      returns_id: boolean - return resource._id instead of resource
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
 
-// createResource -- Create one resource
-// Parameters: [parent_id,] field-1, ... field-n, callback, returns_id
-//      parent_id: string - parent id (e.g. corpus ID for a medium)
-//      fields-i: object
-//      callback: function(err, data, headers)
-//      returns_id: boolean - return resource._id instead of resource
-
-// createResources -- Create several resources at once
-// Parameters: [parent_id,] resources, callback, returns_id
-//      parent_id: string - parent id (e.g. corpus ID for a medium)
-//      resources: list - list of resource objects
-//      callback: function(err, data, headers)
-//      returns_id: boolean - return resource._id instead of resource
-
-// deleteResource -- Delete one resource
-// Parameters: resource_id, callback
-//      resource_id: string - resource MongoDB '_id'
-//      callback: function(err, data, headers)
-
-// updateResource -- Update one resource:
-// Parameters: resource_id, fields, callback
-//      resource_id: string - resource MongoDB '_id'
-//      fields: dict - update provided fields
-//      callback: function(err, data, headers)
-
-// Dealing With Users and Groups
-// TODO: write documentation
-
-// Dealing With Queues
-// TODO: write documentation
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 (function (root, factory) {
   if (typeof define === "function" && define.amd) {
