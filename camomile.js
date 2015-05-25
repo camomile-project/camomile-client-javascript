@@ -649,6 +649,81 @@
   };
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // QUEUES
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  my.getQueue = function (queue, callback) {
+
+    callback = callback || default_callback;
+
+    _queue(queue).get(callback);
+
+  };
+
+  my.getQueues = function (callback, options) {
+
+    callback = callback || default_callback;
+    options = options || {};
+    if (options.returns_id) {
+      callback = _ID(callback);
+    }
+
+    _queue().get(callback);
+
+  };
+
+  my.createQueue = function (name, description, callback, options) {
+
+    callback = callback || default_callback;
+    options = options || {};
+    if (options.returns_id) {
+      callback = _ID(callback);
+    }
+
+    var data = {};
+    data.name = name;
+    data.description = description || {};
+
+    _queue().post(data, callback);
+
+  };
+
+  my.updateQueue = function (queue, fields, callback) {
+    // Updatable fields: name, description
+
+    callback = callback || default_callback;
+
+    var data = fields;
+    _queue(queue).put(data, callback);
+
+  };
+
+  my.enqueue = function (queue, elements, callback) {
+
+    callback = callback || default_callback;
+
+    var data = elements;
+    _queue(queue)('next').put(data, callback);
+
+  };
+
+  my.dequeue = function (queue, callback) {
+
+    callback = callback || default_callback;
+
+    _queue(queue)('next').get(callback);
+
+  };
+
+  my.deleteQueue = function (queue, callback) {
+
+    callback = callback || default_callback;
+
+    _queue(queue).delete(callback);
+
+  };
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // RIGHTS
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -736,79 +811,46 @@
     _layer(layer)('user')(user).delete(callback);
   };
 
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  // QUEUES
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-  my.getQueue = function (queue, callback) {
+  my.getQueuePermissions = function (queue, callback) {
 
     callback = callback || default_callback;
 
-    _queue(queue).get(callback);
+    _queue(queue)('permissions').get(callback);
 
   };
 
-  my.getQueues = function (callback, options) {
+  my.setQueuePermissionsForGroup = function (queue, group, right, callback) {
 
     callback = callback || default_callback;
-    options = options || {};
-    if (options.returns_id) {
-      callback = _ID(callback);
-    }
 
-    _queue().get(callback);
-
+    var data = {
+      'right': right
+    };
+    _queue(queue)('group')(group).put(data, callback);
   };
 
-  my.createQueue = function (name, description, callback, options) {
+  my.removeQueuePermissionsForGroup = function (queue, group, callback) {
 
     callback = callback || default_callback;
-    options = options || {};
-    if (options.returns_id) {
-      callback = _ID(callback);
-    }
 
-    var data = {};
-    data.name = name;
-    data.description = description || {};
-
-    _queue().post(data, callback);
-
+    _queue(queue)('group')(group).delete(callback);
   };
 
-  my.updateQueue = function (queue, fields, callback) {
-    // Updatable fields: name, description
+  my.setQueuePermissionsForUser = function (queue, user, right, callback) {
 
     callback = callback || default_callback;
 
-    var data = fields;
-    _queue(queue).put(data, callback);
-
+    var data = {
+      'right': right
+    };
+    _queue(queue)('user')(user).put(data, callback);
   };
 
-  my.enqueue = function (queue, elements, callback) {
+  my.removeQueuePermissionsForUser = function (queue, user, callback) {
 
     callback = callback || default_callback;
 
-    var data = elements;
-    _queue(queue)('next').put(data, callback);
-
-  };
-
-  my.dequeue = function (queue, callback) {
-
-    callback = callback || default_callback;
-
-    _queue(queue)('next').get(callback);
-
-  };
-
-  my.deleteQueue = function (queue, callback) {
-
-    callback = callback || default_callback;
-
-    _queue(queue).delete(callback);
-
+    _queue(queue)('user')(user).delete(callback);
   };
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
