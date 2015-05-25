@@ -1,3 +1,8 @@
+### Version 0.6 (2015-05-25)
+
+  - feat: queue permission handling
+  - BREAKING: rename *Rights* methods to *Permissions*
+
 ### Version 0.5.0 (2015-04-29)
 
   - major update for upcoming Camomile API v0.5
