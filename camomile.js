@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 
-// Copyright (c) 2014-2015 CAMOMILE project
+// Copyright (c) 2014-2015 CNRS
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -623,94 +623,6 @@
   };
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  // RIGHTS
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-  my.getCorpusRights = function (corpus, callback) {
-
-    callback = callback || default_callback;
-
-    _corpus(corpus)('permissions').get(callback);
-
-  };
-
-  my.setCorpusRightsForGroup = function (corpus, group, right, callback) {
-
-    callback = callback || default_callback;
-
-    var data = {
-      'right': right
-    };
-    _corpus(corpus)('group')(group).put(data, callback);
-  };
-
-  my.removeCorpusRightsForGroup = function (corpus, group, callback) {
-
-    callback = callback || default_callback;
-
-    _corpus(corpus)('group')(group).delete(callback);
-  };
-
-  my.setCorpusRightsForUser = function (corpus, user, right, callback) {
-
-    callback = callback || default_callback;
-
-    var data = {
-      'right': right
-    };
-    _corpus(corpus)('user')(user).put(data, callback);
-  };
-
-  my.removeCorpusRightsForUser = function (corpus, user, callback) {
-
-    callback = callback || default_callback;
-
-    _corpus(corpus)('user')(user).delete(callback);
-  };
-
-  my.getLayerRights = function (layer, callback) {
-
-    callback = callback || default_callback;
-
-    _layer(layer)('permissions').get(callback);
-
-  };
-
-  my.setLayerRightsForGroup = function (layer, group, right, callback) {
-
-    callback = callback || default_callback;
-
-    var data = {
-      'right': right
-    };
-    _layer(layer)('group')(group).put(data, callback);
-  };
-
-  my.removeLayerRightsForGroup = function (layer, group, callback) {
-
-    callback = callback || default_callback;
-
-    _layer(layer)('group')(group).delete(callback);
-  };
-
-  my.setLayerRightsForUser = function (layer, user, right, callback) {
-
-    callback = callback || default_callback;
-
-    var data = {
-      'right': right
-    };
-    _layer(layer)('user')(user).put(data, callback);
-  };
-
-  my.removeLayerRightsForUser = function (layer, user, callback) {
-
-    callback = callback || default_callback;
-
-    _layer(layer)('user')(user).delete(callback);
-  };
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // QUEUES
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -783,6 +695,136 @@
 
     _queue(queue).delete(callback);
 
+  };
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // RIGHTS
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  my.getCorpusPermissions = function (corpus, callback) {
+
+    callback = callback || default_callback;
+
+    _corpus(corpus)('permissions').get(callback);
+
+  };
+
+  my.setCorpusPermissionsForGroup = function (corpus, group, right, callback) {
+
+    callback = callback || default_callback;
+
+    var data = {
+      'right': right
+    };
+    _corpus(corpus)('group')(group).put(data, callback);
+  };
+
+  my.removeCorpusPermissionsForGroup = function (corpus, group, callback) {
+
+    callback = callback || default_callback;
+
+    _corpus(corpus)('group')(group).delete(callback);
+  };
+
+  my.setCorpusPermissionsForUser = function (corpus, user, right, callback) {
+
+    callback = callback || default_callback;
+
+    var data = {
+      'right': right
+    };
+    _corpus(corpus)('user')(user).put(data, callback);
+  };
+
+  my.removeCorpusPermissionsForUser = function (corpus, user, callback) {
+
+    callback = callback || default_callback;
+
+    _corpus(corpus)('user')(user).delete(callback);
+  };
+
+  my.getLayerPermissions = function (layer, callback) {
+
+    callback = callback || default_callback;
+
+    _layer(layer)('permissions').get(callback);
+
+  };
+
+  my.setLayerPermissionsForGroup = function (layer, group, right, callback) {
+
+    callback = callback || default_callback;
+
+    var data = {
+      'right': right
+    };
+    _layer(layer)('group')(group).put(data, callback);
+  };
+
+  my.removeLayerPermissionsForGroup = function (layer, group, callback) {
+
+    callback = callback || default_callback;
+
+    _layer(layer)('group')(group).delete(callback);
+  };
+
+  my.setLayerPermissionsForUser = function (layer, user, right, callback) {
+
+    callback = callback || default_callback;
+
+    var data = {
+      'right': right
+    };
+    _layer(layer)('user')(user).put(data, callback);
+  };
+
+  my.removeLayerPermissionsForUser = function (layer, user, callback) {
+
+    callback = callback || default_callback;
+
+    _layer(layer)('user')(user).delete(callback);
+  };
+
+  my.getQueuePermissions = function (queue, callback) {
+
+    callback = callback || default_callback;
+
+    _queue(queue)('permissions').get(callback);
+
+  };
+
+  my.setQueuePermissionsForGroup = function (queue, group, right, callback) {
+
+    callback = callback || default_callback;
+
+    var data = {
+      'right': right
+    };
+    _queue(queue)('group')(group).put(data, callback);
+  };
+
+  my.removeQueuePermissionsForGroup = function (queue, group, callback) {
+
+    callback = callback || default_callback;
+
+    _queue(queue)('group')(group).delete(callback);
+  };
+
+  my.setQueuePermissionsForUser = function (queue, user, right, callback) {
+
+    callback = callback || default_callback;
+
+    var data = {
+      'right': right
+    };
+    _queue(queue)('user')(user).put(data, callback);
+  };
+
+  my.removeQueuePermissionsForUser = function (queue, user, callback) {
+
+    callback = callback || default_callback;
+
+    _queue(queue)('user')(user).delete(callback);
   };
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
