@@ -701,7 +701,7 @@
   // RIGHTS
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  my.getCorpusRights = function (corpus, callback) {
+  my.getCorpusPermissions = function (corpus, callback) {
 
     callback = callback || default_callback;
 
@@ -709,7 +709,7 @@
 
   };
 
-  my.setCorpusRightsForGroup = function (corpus, group, right, callback) {
+  my.setCorpusPermissionsForGroup = function (corpus, group, right, callback) {
 
     callback = callback || default_callback;
 
@@ -719,14 +719,14 @@
     _corpus(corpus)('group')(group).put(data, callback);
   };
 
-  my.removeCorpusRightsForGroup = function (corpus, group, callback) {
+  my.removeCorpusPermissionsForGroup = function (corpus, group, callback) {
 
     callback = callback || default_callback;
 
     _corpus(corpus)('group')(group).delete(callback);
   };
 
-  my.setCorpusRightsForUser = function (corpus, user, right, callback) {
+  my.setCorpusPermissionsForUser = function (corpus, user, right, callback) {
 
     callback = callback || default_callback;
 
@@ -736,14 +736,14 @@
     _corpus(corpus)('user')(user).put(data, callback);
   };
 
-  my.removeCorpusRightsForUser = function (corpus, user, callback) {
+  my.removeCorpusPermissionsForUser = function (corpus, user, callback) {
 
     callback = callback || default_callback;
 
     _corpus(corpus)('user')(user).delete(callback);
   };
 
-  my.getLayerRights = function (layer, callback) {
+  my.getLayerPermissions = function (layer, callback) {
 
     callback = callback || default_callback;
 
@@ -751,7 +751,7 @@
 
   };
 
-  my.setLayerRightsForGroup = function (layer, group, right, callback) {
+  my.setLayerPermissionsForGroup = function (layer, group, right, callback) {
 
     callback = callback || default_callback;
 
@@ -761,14 +761,14 @@
     _layer(layer)('group')(group).put(data, callback);
   };
 
-  my.removeLayerRightsForGroup = function (layer, group, callback) {
+  my.removeLayerPermissionsForGroup = function (layer, group, callback) {
 
     callback = callback || default_callback;
 
     _layer(layer)('group')(group).delete(callback);
   };
 
-  my.setLayerRightsForUser = function (layer, user, right, callback) {
+  my.setLayerPermissionsForUser = function (layer, user, right, callback) {
 
     callback = callback || default_callback;
 
@@ -778,7 +778,7 @@
     _layer(layer)('user')(user).put(data, callback);
   };
 
-  my.removeLayerRightsForUser = function (layer, user, callback) {
+  my.removeLayerPermissionsForUser = function (layer, user, callback) {
 
     callback = callback || default_callback;
 
