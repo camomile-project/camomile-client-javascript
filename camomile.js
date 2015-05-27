@@ -152,6 +152,12 @@
     _api('me').get(callback);
   };
 
+  my.getMyGroups = function (callback) {
+    callback = callback || default_callback;
+
+    _api('me')('group').get(callback);
+  };
+
   my.update_password = function (new_password, callback) {
     callback = callback || default_callback;
 
