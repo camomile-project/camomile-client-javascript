@@ -695,6 +695,30 @@
 
   };
 
+  my.pick = function (queue, callback) {
+
+    callback = callback || default_callback;
+
+    _queue(queue)('first').get(callback);
+
+  };
+
+  my.pickAll = function (queue, callback) {
+
+    callback = callback || default_callback;
+
+    _queue(queue)('all').get(callback);
+
+  };
+
+  my.pickLength = function (queue, callback) {
+
+    callback = callback || default_callback;
+
+    _queue(queue)('length').get(callback);
+
+  };
+
   my.deleteQueue = function (queue, callback) {
 
     callback = callback || default_callback;
