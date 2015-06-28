@@ -1,3 +1,7 @@
+## Version 0.6.3 (2015-06-28)
+
+  - feat: support for .../count routes
+
 ## Version 0.6.2 (2015-06-08)
 
   - feat: support for new non-destructive queue picking routes

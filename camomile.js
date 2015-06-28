@@ -390,11 +390,27 @@
     _medium(medium)(filter).get(callback);
   };
 
-  // Get medium URL, e.g. for use in <video> src attribute 
+  // Get medium URL, e.g. for use in <video> src attribute
   my.getMediumURL = function (medium, format) {
 
     format = format || 'video';
     return _medium(medium)(format)();
+  };
+
+  my.countMedia = function (callback, options) {
+
+    callback = callback || default_callback;
+    options = options || {};
+    var filter = options.filter || {};
+
+    if (filter.id_corpus !== undefined) {
+      var id_corpus = filter.id_corpus;
+      delete filter.id_corpus;
+      _corpus(id_corpus)('medium')('count')(filter).get(callback);
+    } else {
+      callback('missing filter.id_corpus', null);
+    }
+
   };
 
   // Get list of media
@@ -554,6 +570,23 @@
     }
 
     _annotation(annotation)(filter).get(callback);
+  };
+
+  my.countAnnotations = function (callback, options) {
+
+    callback = callback || default_callback;
+    options = options || {};
+
+    var filter = options.filter || {};
+
+    if (filter.id_layer !== undefined) {
+      var id_layer = filter.id_layer;
+      delete filter.id_layer;
+      _layer(id_layer)('annotation')('count')(filter).get(callback);
+    } else {
+      callback('missing filter.id_layer', null);
+    }
+
   };
 
   my.getAnnotations = function (callback, options) {
