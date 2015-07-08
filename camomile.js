@@ -397,33 +397,34 @@
     return _medium(medium)(format)();
   };
 
-  my.countMedia = function (callback, options) {
-
-    callback = callback || default_callback;
-    options = options || {};
-    var filter = options.filter || {};
-
-    if (filter.id_corpus !== undefined) {
-      var id_corpus = filter.id_corpus;
-      delete filter.id_corpus;
-      _corpus(id_corpus)('medium')('count')(filter).get(callback);
-    } else {
-      callback('missing filter.id_corpus', null);
-    }
-
-  };
-
   // Get list of media
   my.getMedia = function (callback, options) {
     // Available filters: id_corpus, name
 
     callback = callback || default_callback;
     options = options || {};
+    var filter = options.filter || {};
+
+    // route /corpus/:id_corpus/medium/count
+    if (options.returns_count) {
+
+      if (filter.id_corpus === undefined) {
+        callback('returns_count needs options.filter.id_corpus to be set', null);
+        return;
+      }
+
+      var id_corpus = filter.id_corpus;
+      delete filter.id_corpus;
+
+      _corpus(id_corpus)('medium')('count')(filter).get(callback);
+
+      return;
+    }
+
     if (options.returns_id) {
       callback = _ID(callback);
     }
 
-    var filter = options.filter || {};
     if (options.history) {
       filter.history = options.history;
     }
@@ -572,33 +573,33 @@
     _annotation(annotation)(filter).get(callback);
   };
 
-  my.countAnnotations = function (callback, options) {
-
-    callback = callback || default_callback;
-    options = options || {};
-
-    var filter = options.filter || {};
-
-    if (filter.id_layer !== undefined) {
-      var id_layer = filter.id_layer;
-      delete filter.id_layer;
-      _layer(id_layer)('annotation')('count')(filter).get(callback);
-    } else {
-      callback('missing filter.id_layer', null);
-    }
-
-  };
-
   my.getAnnotations = function (callback, options) {
     // Available filters: id_layer, id_medium
 
     callback = callback || default_callback;
     options = options || {};
+    var filter = options.filter || {};
+
+    // route /layer/:id_layer/annotation/count
+    if (options.returns_count) {
+
+      if (filter.id_layer === undefined) {
+        callback('returns_count needs options.filter.id_layer to be set', null);
+        return;
+      }
+
+      var id_layer = filter.id_layer;
+      delete filter.id_layer;
+      _layer(id_layer)('annotation')('count')(filter).get(callback);
+
+      return;
+    }
+
+    // returns ID instead of complete annotations
     if (options.returns_id) {
       callback = _ID(callback);
     }
 
-    var filter = options.filter || {};
     if (options.history) {
       filter.history = options.history;
     }
