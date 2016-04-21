@@ -6,8 +6,8 @@
 ### HTML
 
 ```html
-  <script type="text/javascript" src="camomile.js"></script>
   <script type="text/javascript" src="fermata.js"></script>
+  <script type="text/javascript" src="camomile.js"></script>
 ```
 
 ### Javascript

@@ -191,6 +191,8 @@ fermata._nodeTransport = function (request, callback) {
 fermata._xhrTransport = function (request, callback) {
     var xhr = new XMLHttpRequest(),
         url = fermata._stringForURL(request);
+    
+    xhr.withCredentials = true;
 
     xhr.open(request.method, url, true);
     Object.keys(request.headers).forEach(function (k) {
