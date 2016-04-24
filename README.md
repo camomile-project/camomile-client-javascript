@@ -23,6 +23,21 @@
 
 ```
 
+### Server Sent Event
+
+```javascript
+
+    Camomile.listen(function(err, channel_id, eventSource) {
+        var cancelWatcher = eventSource.watchCorpus(<corpus_id>, function(error, datas) {
+            console.log(error, data);
+        });
+        
+        // For unwatch Corpus :
+        cancelWatcher();
+    });
+    
+```
+
 ## Documentation
 
 Will be available at http://camomile-project.github.io/camomile-server/ 
