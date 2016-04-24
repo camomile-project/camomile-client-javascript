@@ -895,6 +895,128 @@
     };
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // META DATA
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    // CORPUS
+    my.getCorpusMetadata = function(corpus, path, callback) {
+        _getMetadata(_corpus(corpus), path, callback);
+    };
+
+    my.getCorpusMetadataKeys = function(corpus, path, callback) {
+        _getMetadataKeys(_corpus(corpus), path, callback);
+    };
+
+    my.setCorpusMetadata = function(corpus, metadatas, callback) {
+        _setMetadata(_corpus(corpus), metadatas, callback);
+    };
+
+    my.sendCorpusMetadataFile = function(corpus, path, file, callback) {
+        _sendMetadataFile(_corpus(corpus), path, file, callback);
+    };
+
+    my.deleteCorpusMetadata = function(corpus, path, callback) {
+        _deleteMetadata(_corpus(corpus), path, callback);
+    };
+
+    // LAYER
+    my.getLayerMetadata = function(layer, path, callback) {
+        _getMetadata(_layer(layer), path, callback);
+    };
+
+    my.getLayerMetadataKeys = function(layer, path, callback) {
+        _getMetadataKeys(_layer(layer), path, callback);
+    };
+
+    my.setLayerMetadata = function(layer, metadatas, callback) {
+        _setMetadata(_layer(layer), metadatas, callback);
+    };
+
+    my.sendLayerMetadataFile = function(layer, path, file, callback) {
+        _sendMetadataFile(_layer(layer), path, file, callback);
+    };
+
+    my.deleteLayerMetadata = function(layer, path, callback) {
+        _deleteMetadata(_layer(layer), path, callback);
+    };
+
+    // MEDIUM
+    my.getMediumMetadata = function(medium, path, callback) {
+        _getMetadata(_medium(medium), path, callback);
+    };
+
+    my.getMediumMetadataKeys = function(medium, path, callback) {
+        _getMetadataKeys(_medium(medium), path, callback);
+    };
+
+    my.setMediumMetadata = function(medium, metadatas, callback) {
+        _setMetadata(_medium(medium), metadatas, callback);
+    };
+
+    my.sendMediumMetadataFile = function(medium, path, file, callback) {
+        _sendMetadataFile(_medium(medium), path, file, callback);
+    };
+
+    my.deleteMediumMetadata = function(medium, path, callback) {
+        _deleteMetadata(_medium(medium), path, callback);
+    };
+
+    ////
+
+    function _setMetadata(resource, metadatas, callback) {
+        callback = callback || default_callback;
+        resource('metadata').post(metadatas, callback);
+    }
+
+    function _getMetadata(resource, path, callback) {
+        callback = callback || default_callback;
+        resource('metadata')(path).get(callback);
+    }
+
+    function _getMetadataKeys(resource, path, callback) {
+        if (typeof path === 'function') {
+            callback = path;
+            path = '';
+        }
+        callback = callback || default_callback;
+
+        resource('metadata')(path + '.').get(callback);
+    }
+
+    function _deleteMetadata(resource, path, callback) {
+        callback = callback || default_callback;
+        resource('metadata')(path).delete(callback);
+    }
+
+    function _sendMetadataFile(resource, path, file, callback) {
+        callback = callback || default_callback;
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var base64 = e.target.result;
+            var infos = base64.split(',');
+            var paths = path.split('.');
+
+            var object = {};
+            var accessor = object;
+            for (var i = 0; i < paths.length; i++) {
+                accessor[paths[i]] = {};
+                if ( i === paths.length - 1 ) {
+                    accessor[paths[i]] = {
+                        type: 'file',
+                        filename: file.name,
+                        data: infos[1]
+                    };
+                } else {
+                    accessor = accessor[paths[i]];
+                }
+            }
+            _setMetadata(resource, object, callback);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // SSE
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     my.listen = function (callback) {
