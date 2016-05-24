@@ -6,8 +6,8 @@
 ### HTML
 
 ```html
-  <script type="text/javascript" src="camomile.js"></script>
   <script type="text/javascript" src="fermata.js"></script>
+  <script type="text/javascript" src="camomile.js"></script>
 ```
 
 ### Javascript
@@ -21,6 +21,21 @@
   Camomile.getCorpora(callback);
   Camomile.createCorpus(...);
 
+```
+
+### Server Sent Event
+
+```javascript
+
+    Camomile.listen(function(err, channel_id, eventSource) {
+        var cancelWatcher = eventSource.watchCorpus(<corpus_id>, function(error, datas) {
+            console.log(error, data);
+        });
+        
+        // For unwatch Corpus :
+        cancelWatcher();
+    });
+    
 ```
 
 ## Documentation
