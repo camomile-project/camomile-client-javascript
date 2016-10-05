@@ -35,7 +35,9 @@
     var my = {},
         _api,
         _baseUrl,
-        _evSource;
+        _evSource,
+        _cookies;
+
 
     var default_callback = function (err, data) {
         if (err) {
@@ -129,7 +131,19 @@
 
     my.setURL = function (url) {
         _baseUrl = url;
-        _api = fermata.json(url);
+
+        fermata.registerPlugin('cookieAuth',function (transport) {
+          return function (req, callback) {
+            if(_cookies) req.headers['Cookie'] = _cookies;
+            transport(req, callback);
+          }
+        });
+
+        fermata.registerPlugin('jsonAuth', function (transport,baseURL) {
+          return transport.using('json',baseURL).using('cookieAuth');
+        });
+
+        _api = fermata.jsonAuth(url);
         return my;
     };
 
@@ -140,7 +154,14 @@
         data.username = username;
         data.password = password;
 
-        _api('login').post(data, callback);
+        _api('login').post(data, function(err,result,data) {
+          if(err) {
+            return callback(err);
+          }
+          if(data['Set-Cookie'] && data['Set-Cookie'][0]) _cookies=data['Set-Cookie'][0];
+
+          callback(err,result,data);
+        });
     };
 
     my.logout = function (callback) {
