@@ -12,13 +12,12 @@
 ### Javascript
 
 ```javascript
-  
-  Camomile.setURL('http://camomile.fr/api')
-  Camomile.login('username', 'password', callback);
-  Camomile.logout(callback);
+  var client = new Camomile('http://camomile.fr/api');
+  client.login('username', 'password', callback);
+  client.logout(callback);
 
-  Camomile.getCorpora(callback);
-  Camomile.createCorpus(...);
+  client.getCorpora(callback);
+  client.createCorpus(...);
 
 ```
 
@@ -26,7 +25,7 @@
 
 ```javascript
 
-    Camomile.listen(function(err, channel_id, eventSource) {
+    client.listen(function(err, channel_id, eventSource) {
         var cancelWatcher = eventSource.watchCorpus(<corpus_id>, function(error, datas) {
             console.log(error, data);
         });
