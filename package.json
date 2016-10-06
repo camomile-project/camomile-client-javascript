@@ -1,10 +1,11 @@
 {
   "name": "camomile-client",
-  "version": "1.0.0",
+  "version": "0.6.3",
   "description": "Javascript client for Camomile REST API",
-  "main": "camomile.js",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "browserify -s Camomile -e ./ | uglifyjs -c warnings=false -m > camomile.js"
   },
   "repository": {
     "type": "git",
@@ -25,5 +26,9 @@
   "homepage": "https://github.com/camomile-project/camomile-client-javascript#readme",
   "dependencies": {
     "fermata": "^0.11.0-beta1"
+  },
+  "devDependencies": {
+    "browserify": "^13.1.0",
+    "uglify-js": "^2.7.3"
   }
 }

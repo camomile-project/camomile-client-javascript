@@ -15,7 +15,7 @@ var user=process.argv[3];
 var password=process.argv[4];
 
 Camomile.setURL(host);
-Camomile.login(user, password, function(err,result,b) {
+Camomile.login(user, password, function(err,result) {
   if(err) {
     console.log(err);
     return;
