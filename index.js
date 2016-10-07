@@ -23,13 +23,17 @@
 "use strict";
 var fermata = require("fermata");
 
+fermata.registerPlugin('cookieAuth', function (transport, camomileClient) {
+  return function (req, callback) {
+    if (camomileClient._cookies) req.headers['Cookie'] = camomileClient._cookies;
+    else req.options.xhr = {withCredentials: true};
+    transport(req, callback);
+  }
+});
 
-var my = {},
-  _api,
-  _baseUrl,
-  _evSource,
-  _cookies;
-
+fermata.registerPlugin('jsonAuth', function (transport, baseURL, camomileClient) {
+  return transport.using('json', baseURL).using('cookieAuth', camomileClient);
+});
 
 var default_callback = function (err, data) {
   if (err) {
@@ -39,1094 +43,898 @@ var default_callback = function (err, data) {
   }
 };
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// HELPER FUNCTIONS
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-var _user = function (id_user) {
-  var user = _api('user');
-  if (id_user) {
-    user = user(id_user);
-  }
-  return user;
-};
-
-var _group = function (id_group) {
-  var group = _api('group');
-  if (id_group) {
-    group = group(id_group);
-  }
-  return group;
-};
-
-var _corpus = function (id_corpus) {
-  var corpus = _api('corpus');
-  if (id_corpus) {
-    corpus = corpus(id_corpus);
-  }
-  return corpus;
-};
-
-var _medium = function (id_medium) {
-  var medium = _api('medium');
-  if (id_medium) {
-    medium = medium(id_medium);
-  }
-  return medium;
-};
-
-var _layer = function (id_layer) {
-  var layer = _api('layer');
-  if (id_layer) {
-    layer = layer(id_layer);
-  }
-  return layer;
-};
-
-var _annotation = function (id_annotation) {
-  var annotation = _api('annotation');
-  if (id_annotation) {
-    annotation = annotation(id_annotation);
-  }
-  return annotation;
-};
-
-var _queue = function (id_queue) {
-  var queue = _api('queue');
-  if (id_queue) {
-    queue = queue(id_queue);
-  }
-  return queue;
-};
-
-var _id = function (result) {
+function _id(result) {
   if (Array.isArray(result)) {
     return result.map(function (x) {
       return x._id;
     });
   }
   return result._id;
-};
+}
 
-var _ID = function (callback) {
+function _ID(callback) {
   return function (err, data, headers) {
     if (!err) {
       data = _id(data);
     }
     callback(err, data, headers);
   };
-};
+}
+
+
+class Camomile {
+  constructor(url) {
+    this._baseUrl = url;
+    this._api = fermata.jsonAuth(url, this);
+    this._cookies = undefined;
+    this._evSource = undefined;
+  }
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// HELPER FUNCTIONS
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  _user(id_user) {
+    var user = this._api('user');
+    if (id_user) {
+      user = user(id_user);
+    }
+    return user;
+  };
+
+  _group(id_group) {
+    var group = this._api('group');
+    if (id_group) {
+      group = group(id_group);
+    }
+    return group;
+  };
+
+  _corpus(id_corpus) {
+    var corpus = this._api('corpus');
+    if (id_corpus) {
+      corpus = corpus(id_corpus);
+    }
+    return corpus;
+  };
+
+  _medium(id_medium) {
+    var medium = this._api('medium');
+    if (id_medium) {
+      medium = medium(id_medium);
+    }
+    return medium;
+  };
+
+  _layer(id_layer) {
+    var layer = this._api('layer');
+    if (id_layer) {
+      layer = layer(id_layer);
+    }
+    return layer;
+  };
+
+  _annotation(id_annotation) {
+    var annotation = this._api('annotation');
+    if (id_annotation) {
+      annotation = annotation(id_annotation);
+    }
+    return annotation;
+  };
+
+  _queue(id_queue) {
+    var queue = this._api('queue');
+    if (id_queue) {
+      queue = queue(id_queue);
+    }
+    return queue;
+  };
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // AUTHENTICATION
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-my.setURL = function (url) {
-  _baseUrl = url;
+  setURL(url) {
+    this._baseUrl = url;
 
-  fermata.registerPlugin('cookieAuth', function (transport) {
-    return function (req, callback) {
-      if (_cookies) req.headers['Cookie'] = _cookies;
-      else req.options.xhr = {withCredentials: true};
-      transport(req, callback);
-    }
-  });
+    fermata.registerPlugin('cookieAuth', function (transport) {
+      return function (req, callback) {
+        if (this._cookies) req.headers['Cookie'] = this._cookies;
+        else req.options.xhr = {withCredentials: true};
+        transport(req, callback);
+      }
+    });
 
-  fermata.registerPlugin('jsonAuth', function (transport, baseURL) {
-    return transport.using('json', baseURL).using('cookieAuth');
-  });
+    fermata.registerPlugin('jsonAuth', function (transport, baseURL) {
+      return transport.using('json', baseURL).using('cookieAuth');
+    });
 
-  _api = fermata.jsonAuth(url);
-  return my;
-};
+    this._api = fermata.jsonAuth(url);
+  };
 
-my.login = function (username, password, callback) {
-  callback = callback || default_callback;
+  login(username, password, callback = default_callback) {
+    var data = {};
+    data.username = username;
+    data.password = password;
 
-  var data = {};
-  data.username = username;
-  data.password = password;
+    this._api('login').post(data, (err, result, data) => {
+      if (err) {
+        return callback(err);
+      }
+      if (data['Set-Cookie'] && data['Set-Cookie'][0]) this._cookies = data['Set-Cookie'][0];
 
-  _api('login').post(data, function (err, result, data) {
-    if (err) {
-      return callback(err);
-    }
-    if (data['Set-Cookie'] && data['Set-Cookie'][0]) _cookies = data['Set-Cookie'][0];
+      callback(err, result, data);
+    });
+  };
 
-    callback(err, result, data);
-  });
-};
+  logout(callback = default_callback) {
+    this._api('logout').post({}, callback);
+  };
 
-my.logout = function (callback) {
-  callback = callback || default_callback;
+  me(callback = default_callback) {
+    this._api('me').get(callback);
+  };
 
-  _api('logout').post({}, callback);
-};
+  getMyGroups(callback = default_callback) {
+    this._api('me')('group').get(callback);
+  };
 
-my.me = function (callback) {
-  callback = callback || default_callback;
+  update_password(new_password, callback = default_callback) {
+    var data = {};
+    data.password = new_password;
 
-  _api('me').get(callback);
-};
-
-my.getMyGroups = function (callback) {
-  callback = callback || default_callback;
-
-  _api('me')('group').get(callback);
-};
-
-my.update_password = function (new_password, callback) {
-  callback = callback || default_callback;
-
-  var data = {};
-  data.password = new_password;
-
-  _api('me').put(data, callback);
-};
+    this._api('me').put(data, callback);
+  };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // USERS
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-my.getUser = function (user, callback) {
+  getUser(user, callback = default_callback) {
 
-  callback = callback || default_callback;
+    this._user(user).get(callback);
+  };
 
-  _user(user).get(callback);
-};
+  getUsers(callback = default_callback, {returns_id,filter={}} = {}) {
+    // Available filters: username, role
 
-my.getUsers = function (callback, options) {
-  // Available filters: username, role
+    if (returns_id) {
+      callback = _ID(callback);
+    }
 
-  callback = callback || default_callback;
-  options = options || {};
-  if (options.returns_id) {
-    callback = _ID(callback);
-  }
+    this._user()(filter).get(callback);
+  };
 
-  var filter = options.filter || {};
-  _user()(filter).get(callback);
-};
+  createUser(username, password, description = {}, role = 'user', callback = default_callback, {returns_id} = {}) {
 
-my.createUser = function (username, password, description, role, callback, options) {
+    if (returns_id) {
+      callback = _ID(callback);
+    }
 
-  callback = callback || default_callback;
-  options = options || {};
-  if (options.returns_id) {
-    callback = _ID(callback);
-  }
+    var data = {};
+    data.username = username;
+    data.password = password;
+    data.description = description;
+    data.role = role;
 
-  var data = {};
-  data.username = username;
-  data.password = password;
-  data.description = description || {};
-  data.role = role || 'user';
+    this._user().post(data, callback);
+  };
 
-  _user().post(data, callback);
-};
+  updateUser(user, fields = {}, callback = default_callback) {
+    // Updatable fields: password, description, role
 
-my.updateUser = function (user, fields, callback) {
-  // Updatable fields: password, description, role
+    this._user(user).put(fields, callback);
+  };
 
-  callback = callback || default_callback;
+  deleteUser(user, callback = default_callback) {
+    this._user(user).delete(callback);
+  };
 
-  fields = fields || {};
-  _user(user).put(fields, callback);
-};
+  getUserGroups(user, callback = default_callback, {returns_id} = {}) {
+    if (returns_id) {
+      callback = _ID(callback);
+    }
 
-my.deleteUser = function (user, callback) {
-
-  callback = callback || default_callback;
-
-  _user(user).delete(callback);
-};
-
-my.getUserGroups = function (user, callback, options) {
-
-  callback = callback || default_callback;
-  options = options || {};
-  if (options.returns_id) {
-    callback = _ID(callback);
-  }
-
-  _user(user)('group').get(callback);
-};
+    this._user(user)('group').get(callback);
+  };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // GROUPS
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-my.getGroup = function (group, callback) {
+  getGroup(group, callback = default_callback) {
+    this._group(group).get(callback);
+  };
 
-  callback = callback || default_callback;
+  getGroups(callback = default_callback, {returns_id,filter={}} = {}) {
+    // Available filters: name
 
-  _group(group).get(callback);
-};
+    if (returns_id) {
+      callback = _ID(callback);
+    }
 
-my.getGroups = function (callback, options) {
-  // Available filters: name
 
-  callback = callback || default_callback;
-  options = options || {};
-  if (options.returns_id) {
-    callback = _ID(callback);
+    this._group()(filter).get(callback);
+  };
+
+  createGroup(name, description = {}, callback = default_callback, {returns_id} = {}) {
+    if (returns_id) {
+      callback = _ID(callback);
+    }
+
+    var data = {};
+    data.name = name;
+    data.description = description;
+
+    this._group().post(data, callback);
+  };
+
+  updateGroup(group, fields = {}, callback = default_callback) {
+    // Updatable fields: description
+
+    this._group(group).put(fields, callback);
   }
 
-  var filter = options.filter || {};
-
-  _group()(filter).get(callback);
-};
-
-my.createGroup = function (name, description, callback, options) {
-
-  callback = callback || default_callback;
-  options = options || {};
-  if (options.returns_id) {
-    callback = _ID(callback);
+  deleteGroup(group, callback = default_callback) {
+    this. _group(group).delete(callback);
   }
 
-  var data = {};
-  data.name = name;
-  data.description = description || {};
+  addUserToGroup(user, group, callback = default_callback) {
+    this._group(group)('user')(user).put(callback);
+  }
 
-  _group().post(data, callback);
-};
-
-my.updateGroup = function (group, fields, callback) {
-  // Updatable fields: description
-
-  callback = callback || default_callback;
-
-  fields = fields || {};
-  _group(group).put(fields, callback);
-};
-
-my.deleteGroup = function (group, callback) {
-
-  callback = callback || default_callback;
-
-  _group(group).delete(callback);
-};
-
-my.addUserToGroup = function (user, group, callback) {
-
-  callback = callback || default_callback;
-
-  _group(group)('user')(user).put(callback);
-};
-
-my.removeUserFromGroup = function (user, group, callback) {
-
-  callback = callback || default_callback;
-
-  _group(group)('user')(user).delete(callback);
-};
+  removeUserFromGroup(user, group, callback = default_callback) {
+    this._group(group)('user')(user).delete(callback);
+  };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // CORPORA
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 // Get corpus by ID
-my.getCorpus = function (corpus, callback, options) {
+  getCorpus(corpus, callback = default_callback, {history} = {}) {
+    var filter = {};
+    if (history) {
+      filter.history = history;
+    }
 
-  callback = callback || default_callback;
-  options = options || {};
-
-  var filter = {};
-  if (options.history) {
-    filter.history = options.history;
-  }
-
-  _corpus(corpus)(filter).get(callback);
-};
+    this._corpus(corpus)(filter).get(callback);
+  };
 
 // Get list of corpora
-my.getCorpora = function (callback, options) {
-  // Available filters: name
+  getCorpora(callback = default_callback, {returns_id,filter={},history}={}) {
+    // Available filters: name
 
-  callback = callback || default_callback;
-  options = options || {};
-  if (options.returns_id) {
-    callback = _ID(callback);
-  }
+    if (returns_id) {
+      callback = _ID(callback);
+    }
 
-  var filter = options.filter || {};
-  if (options.history) {
-    filter.history = options.history;
-  }
+    if (history) {
+      filter.history = history;
+    }
 
-  _corpus()(filter).get(callback);
-};
+    this._corpus()(filter).get(callback);
+  };
 
-my.createCorpus = function (name, description, callback, options) {
+  createCorpus(name, description = {}, callback = default_callback, {returns_id}) {
+    if (returns_id) {
+      callback = _ID(callback);
+    }
 
-  callback = callback || default_callback;
-  options = options || {};
-  if (options.returns_id) {
-    callback = _ID(callback);
-  }
+    var data = {};
+    data.name = name;
+    data.description = description;
 
-  var data = {};
-  data.name = name;
-  data.description = description || {};
+    this._corpus().post(data, callback);
+  };
 
-  _corpus().post(data, callback);
-};
+  updateCorpus(corpus, fields = {}, callback = default_callback) {
+    // Updatable fields: name?, description
 
-my.updateCorpus = function (corpus, fields, callback) {
-  // Updatable fields: name?, descrption
+    this._corpus(corpus).put(fields, callback);
+  };
 
-  callback = callback || default_callback;
+  deleteCorpus(corpus, callback = default_callback) {
 
-  fields = fields || {};
-  _corpus(corpus).put(fields, callback);
-};
-
-my.deleteCorpus = function (corpus, callback) {
-
-  callback = callback || default_callback;
-
-  _corpus(corpus).delete(callback);
-};
+    this._corpus(corpus).delete(callback);
+  };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // MEDIA
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 // Get medium by ID
-my.getMedium = function (medium, callback, options) {
+  getMedium(medium, callback = default_callback, {history} = {}) {
+    var filter = {};
+    if (history) {
+      filter.history = history;
+    }
 
-  callback = callback || default_callback;
-  options = options || {};
-
-  var filter = {};
-  if (options.history) {
-    filter.history = options.history;
-  }
-
-  _medium(medium)(filter).get(callback);
-};
+    this._medium(medium)(filter).get(callback);
+  };
 
 // Get medium URL, e.g. for use in <video> src attribute
-my.getMediumURL = function (medium, format) {
-
-  format = format || 'video';
-  return _medium(medium)(format)();
-};
+  getMediumURL(medium, format = "video") {
+    return this._medium(medium)(format)();
+  };
 
 // Get list of media
-my.getMedia = function (callback, options) {
-  // Available filters: id_corpus, name
+  getMedia(callback = default_callback, {filter= {},returns_count,returns_id,history}={}) {
+    // Available filters: id_corpus, name
 
-  callback = callback || default_callback;
-  options = options || {};
-  var filter = options.filter || {};
+    // route /corpus/:id_corpus/medium/count
+    if (returns_count) {
 
-  // route /corpus/:id_corpus/medium/count
-  if (options.returns_count) {
+      if (filter.id_corpus === undefined) {
+        callback('returns_count needs options.filter.id_corpus to be set', null);
+        return;
+      }
 
-    if (filter.id_corpus === undefined) {
-      callback('returns_count needs options.filter.id_corpus to be set', null);
+      let id_corpus = filter.id_corpus;
+      delete filter.id_corpus;
+
+      this._corpus(id_corpus)('medium')('count')(filter).get(callback);
+
       return;
     }
 
-    var id_corpus = filter.id_corpus;
-    delete filter.id_corpus;
+    if (returns_id) {
+      callback = _ID(callback);
+    }
 
-    _corpus(id_corpus)('medium')('count')(filter).get(callback);
+    if (history) {
+      filter.history = history;
+    }
 
-    return;
-  }
+    if (filter.id_corpus !== undefined) {
+      let id_corpus = filter.id_corpus;
+      delete filter.id_corpus;
+      this._corpus(id_corpus)('medium')(filter).get(callback);
+    } else {
+      this._medium()(filter).get(callback);
+    }
 
-  if (options.returns_id) {
-    callback = _ID(callback);
-  }
+  };
 
-  if (options.history) {
-    filter.history = options.history;
-  }
+  createMedium(corpus, name, url, description = {}, callback = default_callback, {returns_id} = {}) {
 
-  if (filter.id_corpus !== undefined) {
-    var id_corpus = filter.id_corpus;
-    delete filter.id_corpus;
-    _corpus(id_corpus)('medium')(filter).get(callback);
-  } else {
-    _medium()(filter).get(callback);
-  }
+    if (returns_id) {
+      callback = _ID(callback);
+    }
 
-};
+    var data = {};
+    data.name = name;
+    data.url = url;
+    data.description = description;
 
-my.createMedium = function (corpus, name, url, description, callback, options) {
+    this._corpus(corpus)('medium').post(data, callback);
 
-  callback = callback || default_callback;
-  options = options || {};
-  if (options.returns_id) {
-    callback = _ID(callback);
-  }
+  };
 
-  var data = {};
-  data.name = name;
-  data.url = url;
-  data.description = description || {};
+  createMedia(corpus, media, callback = default_callback, {returns_id} = {}) {
+    if (returns_id) {
+      callback = _ID(callback);
+    }
 
-  _corpus(corpus)('medium').post(data, callback);
+    this._corpus(corpus)('medium').post(media, callback);
+  };
 
-};
+  updateMedium(medium, fields = {}, callback = default_callback) {
+    // Updatable fields: name?, url, description
 
-my.createMedia = function (corpus, media, callback, options) {
+    this._medium(medium).put(fields, callback);
+  };
 
-  callback = callback || default_callback;
-  options = options || {};
-  if (options.returns_id) {
-    callback = _ID(callback);
-  }
-
-  _corpus(corpus)('medium').post(media, callback);
-};
-
-my.updateMedium = function (medium, fields, callback) {
-  // Updatable fields: name?, url, description
-
-  callback = callback || default_callback;
-
-  fields = fields || {};
-  _medium(medium).put(fields, callback);
-};
-
-my.deleteMedium = function (medium, callback) {
-
-  callback = callback || default_callback;
-
-  _medium(medium).delete(callback);
-};
+  deleteMedium(medium, callback = default_callback) {
+    this._medium(medium).delete(callback);
+  };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // LAYERS
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 // Get layer by ID
-my.getLayer = function (layer, callback) {
-
-  callback = callback || default_callback;
-
-  _layer(layer).get(callback);
-};
+  getLayer(layer, callback = default_callback) {
+    this._layer(layer).get(callback);
+  };
 
 // Get list of layers
-my.getLayers = function (callback, options) {
-  // Available filters: id_corpus, name
+  getLayers(callback = default_callback, {returns_id,filter = {}, history} = {}) {
+    // Available filters: id_corpus, name
 
-  callback = callback || default_callback;
-  options = options || {};
-  if (options.returns_id) {
-    callback = _ID(callback);
-  }
+    if (returns_id) {
+      callback = _ID(callback);
+    }
 
-  var filter = options.filter || {};
-  if (options.history) {
-    filter.history = options.history;
-  }
+    if (history) {
+      filter.history = history;
+    }
 
-  if (filter.id_corpus !== undefined) {
-    var id_corpus = filter.id_corpus;
-    delete filter.id_corpus;
-    _corpus(id_corpus)('layer')(filter).get(callback);
-  } else {
-    _layer()(filter).get(callback);
-  }
+    if (filter.id_corpus !== undefined) {
+      var id_corpus = filter.id_corpus;
+      delete filter.id_corpus;
+      this._corpus(id_corpus)('layer')(filter).get(callback);
+    } else {
+      this._layer()(filter).get(callback);
+    }
 
-};
+  };
 
-my.createLayer = function (corpus, name, description, fragment_type, data_type, annotations, callback, options) {
+  createLayer(corpus, name, description, fragment_type, data_type, annotations, callback = default_callback, {returns_id} = {}) {
 
-  callback = callback || default_callback;
-  options = options || {};
-  if (options.returns_id) {
-    callback = _ID(callback);
-  }
+    if (returns_id) {
+      callback = _ID(callback);
+    }
 
-  var data = {};
-  data.name = name;
-  data.description = description || {};
-  data.fragment_type = fragment_type;
-  data.data_type = data_type;
-  data.annotations = annotations || [];
+    var data = {};
+    data.name = name;
+    data.description = description || {};
+    data.fragment_type = fragment_type;
+    data.data_type = data_type;
+    data.annotations = annotations || [];
 
-  _corpus(corpus)('layer').post(data, callback);
+    this._corpus(corpus)('layer').post(data, callback);
 
-};
+  };
 
-my.updateLayer = function (layer, fields, callback) {
-  // Updatable fields: name?, description, fragment_type, data_type
+  updateLayer(layer, fields = {}, callback = default_callback) {
+    // Updatable fields: name?, description, fragment_type, data_type
 
-  callback = callback || default_callback;
+    this._layer(layer).put(fields, callback);
 
-  fields = fields || {};
-  _layer(layer).put(fields, callback);
+  };
 
-};
-
-my.deleteLayer = function (layer, callback) {
-
-  callback = callback || default_callback;
-
-  _layer(layer).delete(callback);
-};
+  deleteLayer(layer, callback = default_callback) {
+    this._layer(layer).delete(callback);
+  };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ANNOTATIONS
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-my.getAnnotation = function (annotation, callback, options) {
+  getAnnotation(annotation, callback = default_callback, {history} = {}) {
 
-  callback = callback || default_callback;
-  options = options || {};
+    var filter = {};
+    if (history) {
+      filter.history = history;
+    }
 
-  var filter = {};
-  if (options.history) {
-    filter.history = options.history;
-  }
+    this._annotation(annotation)(filter).get(callback);
+  };
 
-  _annotation(annotation)(filter).get(callback);
-};
+  getAnnotations(callback = default_callback, {returns_count, filter = {}, history, returns_id} = {}) {
+    // Available filters: id_layer, id_medium
 
-my.getAnnotations = function (callback, options) {
-  // Available filters: id_layer, id_medium
+    // route /layer/:id_layer/annotation/count
+    if (returns_count) {
 
-  callback = callback || default_callback;
-  options = options || {};
-  var filter = options.filter || {};
+      if (filter.id_layer === undefined) {
+        callback('returns_count needs options.filter.id_layer to be set', null);
+        return;
+      }
 
-  // route /layer/:id_layer/annotation/count
-  if (options.returns_count) {
+      let id_layer = filter.id_layer;
+      delete filter.id_layer;
+      this._layer(id_layer)('annotation')('count')(filter).get(callback);
 
-    if (filter.id_layer === undefined) {
-      callback('returns_count needs options.filter.id_layer to be set', null);
       return;
     }
 
-    var id_layer = filter.id_layer;
-    delete filter.id_layer;
-    _layer(id_layer)('annotation')('count')(filter).get(callback);
+    // returns ID instead of complete annotations
+    if (returns_id) {
+      callback = _ID(callback);
+    }
 
-    return;
-  }
+    if (history) {
+      filter.history = history;
+    }
 
-  // returns ID instead of complete annotations
-  if (options.returns_id) {
-    callback = _ID(callback);
-  }
+    if (filter.id_layer !== undefined) {
+      let id_layer = filter.id_layer;
+      delete filter.id_layer;
+      this._layer(id_layer)('annotation')(filter).get(callback);
+    } else {
+      this._annotation()(filter).get(callback);
+    }
 
-  if (options.history) {
-    filter.history = options.history;
-  }
+  };
 
-  if (filter.id_layer !== undefined) {
-    var id_layer = filter.id_layer;
-    delete filter.id_layer;
-    _layer(id_layer)('annotation')(filter).get(callback);
-  } else {
-    _annotation()(filter).get(callback);
-  }
+  createAnnotation(layer, medium, fragment = {}, data = {}, callback = default_callback, {returns_id} = {}) {
+    if (returns_id) {
+      callback = _ID(callback);
+    }
 
-};
+    var _data = {
+      id_medium: medium,
+      fragment,
+      data
+    };
 
-my.createAnnotation = function (layer, medium, fragment, data, callback, options) {
+    this._layer(layer)('annotation').post(_data, callback);
 
-  callback = callback || default_callback;
-  options = options || {};
-  if (options.returns_id) {
-    callback = _ID(callback);
-  }
+  };
 
-  var _data = {};
-  _data.id_medium = medium;
-  _data.fragment = fragment || {};
-  _data.data = data || {};
+  createAnnotations(layer, annotations, callback = default_callback, {returns_id} = {}) {
+    if (returns_id) {
+      callback = _ID(callback);
+    }
 
-  _layer(layer)('annotation').post(_data, callback);
+    this._layer(layer)('annotation').post(annotations, callback);
 
-};
+  };
 
-my.createAnnotations = function (layer, annotations, callback, options) {
+  updateAnnotation(annotation, fields = {}, callback = default_callback) {
+    // Updatable fields: fragment, data
 
-  callback = callback || default_callback;
-  options = options || {};
-  if (options.returns_id) {
-    callback = _ID(callback);
-  }
+    this._annotation(annotation).put(fields, callback);
 
-  var data = annotations;
-  _layer(layer)('annotation').post(data, callback);
+  };
 
-};
-
-my.updateAnnotation = function (annotation, fields, callback) {
-  // Updatable fields: fragment, data
-
-  callback = callback || default_callback;
-
-  fields = fields || {};
-  _annotation(annotation).put(fields, callback);
-
-};
-
-my.deleteAnnotation = function (annotation, callback) {
-
-  callback = callback || default_callback;
-
-  _annotation(annotation).delete(callback);
-
-};
+  deleteAnnotation(annotation, callback = default_callback) {
+    this._annotation(annotation).delete(callback);
+  };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // QUEUES
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-my.getQueue = function (queue, callback) {
+  getQueue(queue, callback = default_callback) {
+    this._queue(queue).get(callback);
 
-  callback = callback || default_callback;
+  };
 
-  _queue(queue).get(callback);
+  getQueues(callback = default_callback, {returns_id} = {}) {
+    if (returns_id) {
+      callback = _ID(callback);
+    }
 
-};
+    this._queue().get(callback);
 
-my.getQueues = function (callback, options) {
+  };
 
-  callback = callback || default_callback;
-  options = options || {};
-  if (options.returns_id) {
-    callback = _ID(callback);
-  }
+  createQueue(name, description = {}, callback = default_callback, {returns_id} = {}) {
+    if (returns_id) {
+      callback = _ID(callback);
+    }
 
-  _queue().get(callback);
+    var data = {};
+    data.name = name;
+    data.description = description;
 
-};
+    this._queue().post(data, callback);
 
-my.createQueue = function (name, description, callback, options) {
+  };
 
-  callback = callback || default_callback;
-  options = options || {};
-  if (options.returns_id) {
-    callback = _ID(callback);
-  }
+  updateQueue(queue, fields, callback = default_callback) {
+    // Updatable fields: name, description
 
-  var data = {};
-  data.name = name;
-  data.description = description || {};
+    this._queue(queue).put(fields, callback);
 
-  _queue().post(data, callback);
+  };
 
-};
+  enqueue(queue, elements, callback = default_callback) {
+    this._queue(queue)('next').put(elements, callback);
+  };
 
-my.updateQueue = function (queue, fields, callback) {
-  // Updatable fields: name, description
+  dequeue(queue, callback = default_callback) {
+    this._queue(queue)('next').get(callback);
+  };
 
-  callback = callback || default_callback;
+  pick(queue, callback = default_callback) {
+    this._queue(queue)('first').get(callback);
+  };
 
-  var data = fields;
-  _queue(queue).put(data, callback);
+  pickAll(queue, callback = default_callback) {
+    this._queue(queue)('all').get(callback);
+  };
 
-};
+  pickLength(queue, callback = default_callback) {
+    this._queue(queue)('length').get(callback);
+  };
 
-my.enqueue = function (queue, elements, callback) {
-
-  callback = callback || default_callback;
-
-  var data = elements;
-  _queue(queue)('next').put(data, callback);
-
-};
-
-my.dequeue = function (queue, callback) {
-
-  callback = callback || default_callback;
-
-  _queue(queue)('next').get(callback);
-
-};
-
-my.pick = function (queue, callback) {
-
-  callback = callback || default_callback;
-
-  _queue(queue)('first').get(callback);
-
-};
-
-my.pickAll = function (queue, callback) {
-
-  callback = callback || default_callback;
-
-  _queue(queue)('all').get(callback);
-
-};
-
-my.pickLength = function (queue, callback) {
-
-  callback = callback || default_callback;
-
-  _queue(queue)('length').get(callback);
-
-};
-
-my.deleteQueue = function (queue, callback) {
-
-  callback = callback || default_callback;
-
-  _queue(queue).delete(callback);
-
-};
+  deleteQueue(queue, callback = default_callback) {
+    this._queue(queue).delete(callback);
+  };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // PERMISSIONS
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-my.getCorpusPermissions = function (corpus, callback) {
-
-  callback = callback || default_callback;
-
-  _corpus(corpus)('permissions').get(callback);
-
-};
-
-my.setCorpusPermissionsForGroup = function (corpus, group, right, callback) {
-
-  callback = callback || default_callback;
-
-  var data = {
-    'right': right
+  getCorpusPermissions(corpus, callback = default_callback) {
+    this._corpus(corpus)('permissions').get(callback);
   };
-  _corpus(corpus)('group')(group).put(data, callback);
-};
 
-my.removeCorpusPermissionsForGroup = function (corpus, group, callback) {
-
-  callback = callback || default_callback;
-
-  _corpus(corpus)('group')(group).delete(callback);
-};
-
-my.setCorpusPermissionsForUser = function (corpus, user, right, callback) {
-
-  callback = callback || default_callback;
-
-  var data = {
-    'right': right
+  setCorpusPermissionsForGroup(corpus, group, right, callback = default_callback) {
+    var data = {
+      'right': right
+    };
+    this._corpus(corpus)('group')(group).put(data, callback);
   };
-  _corpus(corpus)('user')(user).put(data, callback);
-};
 
-my.removeCorpusPermissionsForUser = function (corpus, user, callback) {
-
-  callback = callback || default_callback;
-
-  _corpus(corpus)('user')(user).delete(callback);
-};
-
-my.getLayerPermissions = function (layer, callback) {
-
-  callback = callback || default_callback;
-
-  _layer(layer)('permissions').get(callback);
-
-};
-
-my.setLayerPermissionsForGroup = function (layer, group, right, callback) {
-
-  callback = callback || default_callback;
-
-  var data = {
-    'right': right
+  removeCorpusPermissionsForGroup(corpus, group, callback = default_callback) {
+    this._corpus(corpus)('group')(group).delete(callback);
   };
-  _layer(layer)('group')(group).put(data, callback);
-};
 
-my.removeLayerPermissionsForGroup = function (layer, group, callback) {
-
-  callback = callback || default_callback;
-
-  _layer(layer)('group')(group).delete(callback);
-};
-
-my.setLayerPermissionsForUser = function (layer, user, right, callback) {
-
-  callback = callback || default_callback;
-
-  var data = {
-    'right': right
+  setCorpusPermissionsForUser(corpus, user, right, callback = default_callback) {
+    var data = {
+      'right': right
+    };
+    this._corpus(corpus)('user')(user).put(data, callback);
   };
-  _layer(layer)('user')(user).put(data, callback);
-};
 
-my.removeLayerPermissionsForUser = function (layer, user, callback) {
-
-  callback = callback || default_callback;
-
-  _layer(layer)('user')(user).delete(callback);
-};
-
-my.getQueuePermissions = function (queue, callback) {
-
-  callback = callback || default_callback;
-
-  _queue(queue)('permissions').get(callback);
-
-};
-
-my.setQueuePermissionsForGroup = function (queue, group, right, callback) {
-
-  callback = callback || default_callback;
-
-  var data = {
-    'right': right
+  removeCorpusPermissionsForUser(corpus, user, callback = default_callback) {
+    this._corpus(corpus)('user')(user).delete(callback);
   };
-  _queue(queue)('group')(group).put(data, callback);
-};
 
-my.removeQueuePermissionsForGroup = function (queue, group, callback) {
-
-  callback = callback || default_callback;
-
-  _queue(queue)('group')(group).delete(callback);
-};
-
-my.setQueuePermissionsForUser = function (queue, user, right, callback) {
-
-  callback = callback || default_callback;
-
-  var data = {
-    'right': right
+  getLayerPermissions(layer, callback = default_callback) {
+    this._layer(layer)('permissions').get(callback);
   };
-  _queue(queue)('user')(user).put(data, callback);
-};
 
-my.removeQueuePermissionsForUser = function (queue, user, callback) {
+  setLayerPermissionsForGroup(layer, group, right, callback = default_callback) {
+    var data = {
+      'right': right
+    };
+    this._layer(layer)('group')(group).put(data, callback);
+  };
 
-  callback = callback || default_callback;
+  removeLayerPermissionsForGroup(layer, group, callback = default_callback) {
+    this._layer(layer)('group')(group).delete(callback);
+  };
 
-  _queue(queue)('user')(user).delete(callback);
-};
+  setLayerPermissionsForUser(layer, user, right, callback = default_callback) {
+    var data = {
+      'right': right
+    };
+    this._layer(layer)('user')(user).put(data, callback);
+  };
+
+  removeLayerPermissionsForUser(layer, user, callback = default_callback) {
+    this._layer(layer)('user')(user).delete(callback);
+  };
+
+  getQueuePermissions(queue, callback = default_callback) {
+    this._queue(queue)('permissions').get(callback);
+
+  };
+
+  setQueuePermissionsForGroup(queue, group, right, callback = default_callback) {
+    var data = {
+      'right': right
+    };
+    this._queue(queue)('group')(group).put(data, callback);
+  };
+
+  removeQueuePermissionsForGroup(queue, group, callback = default_callback) {
+    this._queue(queue)('group')(group).delete(callback);
+  };
+
+  setQueuePermissionsForUser(queue, user, right, callback = default_callback) {
+    var data = {
+      'right': right
+    };
+    this._queue(queue)('user')(user).put(data, callback);
+  };
+
+  removeQueuePermissionsForUser(queue, user, callback = default_callback) {
+    this._queue(queue)('user')(user).delete(callback);
+  };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // META DATA
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 // CORPUS
-my.getCorpusMetadata = function (corpus, path, callback) {
-  _getMetadata(_corpus(corpus), path, callback);
-};
+  getCorpusMetadata(corpus, path, callback) {
+    this._getMetadata(this._corpus(corpus), path, callback);
+  };
 
-my.getCorpusMetadataKeys = function (corpus, path, callback) {
-  _getMetadataKeys(_corpus(corpus), path, callback);
-};
+  getCorpusMetadataKeys(corpus, path, callback) {
+    this._getMetadataKeys(this._corpus(corpus), path, callback);
+  };
 
-my.setCorpusMetadata = function (corpus, metadatas, path, callback) {
-  _setMetadata(_corpus(corpus), metadatas, path, callback);
-};
+  setCorpusMetadata(corpus, metadatas, path, callback) {
+    this._setMetadata(this._corpus(corpus), metadatas, path, callback);
+  };
 
-my.sendCorpusMetadataFile = function (corpus, path, file, callback) {
-  _sendMetadataFile(_corpus(corpus), path, file, callback);
-};
+  sendCorpusMetadataFile(corpus, path, file, callback) {
+    this._sendMetadataFile(this._corpus(corpus), path, file, callback);
+  };
 
-my.deleteCorpusMetadata = function (corpus, path, callback) {
-  _deleteMetadata(_corpus(corpus), path, callback);
-};
+  deleteCorpusMetadata(corpus, path, callback) {
+    this._deleteMetadata(this._corpus(corpus), path, callback);
+  };
 
 // LAYER
-my.getLayerMetadata = function (layer, path, callback) {
-  _getMetadata(_layer(layer), path, callback);
-};
+  getLayerMetadata(layer, path, callback) {
+    this._getMetadata(this._layer(layer), path, callback);
+  };
 
-my.getLayerMetadataKeys = function (layer, path, callback) {
-  _getMetadataKeys(_layer(layer), path, callback);
-};
+  getLayerMetadataKeys(layer, path, callback) {
+    this._getMetadataKeys(this._layer(layer), path, callback);
+  };
 
-my.setLayerMetadata = function (layer, metadatas, path, callback) {
-  _setMetadata(_layer(layer), metadatas, path, callback);
-};
+  setLayerMetadata(layer, metadatas, path, callback) {
+    this._setMetadata(this._layer(layer), metadatas, path, callback);
+  };
 
-my.sendLayerMetadataFile = function (layer, path, file, callback) {
-  _sendMetadataFile(_layer(layer), path, file, callback);
-};
+  msendLayerMetadataFile(layer, path, file, callback) {
+    this._sendMetadataFile(this._layer(layer), path, file, callback);
+  };
 
-my.deleteLayerMetadata = function (layer, path, callback) {
-  _deleteMetadata(_layer(layer), path, callback);
-};
+  deleteLayerMetadata(layer, path, callback) {
+    this. _deleteMetadata(this._layer(layer), path, callback);
+  };
 
 // MEDIUM
-my.getMediumMetadata = function (medium, path, callback) {
-  _getMetadata(_medium(medium), path, callback);
-};
+  getMediumMetadata(medium, path, callback) {
+    this._getMetadata(this._medium(medium), path, callback);
+  };
 
-my.getMediumMetadataKeys = function (medium, path, callback) {
-  _getMetadataKeys(_medium(medium), path, callback);
-};
+  getMediumMetadataKeys(medium, path, callback) {
+    this._getMetadataKeys(this._medium(medium), path, callback);
+  };
 
-my.setMediumMetadata = function (medium, metadatas, path, callback) {
-  _setMetadata(_medium(medium), metadatas, path, callback);
-};
+  static setMediumMetadata(medium, metadatas, path, callback) {
+    Camomile._setMetadata(this._medium(medium), metadatas, path, callback);
+  };
 
-my.sendMediumMetadataFile = function (medium, path, file, callback) {
-  _sendMetadataFile(_medium(medium), path, file, callback);
-};
+  sendMediumMetadataFile(medium, path, file, callback) {
+    this._sendMetadataFile(this._medium(medium), path, file, callback);
+  };
 
-my.deleteMediumMetadata = function (medium, path, callback) {
-  _deleteMetadata(_medium(medium), path, callback);
-};
+  deleteMediumMetadata(medium, path, callback) {
+    this._deleteMetadata(this._medium(medium), path, callback);
+  };
 
 ////
 
-function _setMetadata(resource, metadatas, path, callback) {
-  if (typeof (path) === 'function') {
-    callback = path || default_callback;
-  }
+  static _setMetadata(resource, metadatas, path, callback) {
+    if (typeof (path) === 'function') {
+      callback = path || default_callback;
+    }
 
-  callback = callback || default_callback;
-
-  if (typeof (path) === 'string') {
-    metadatas = _constructMetadataPathObject(path, metadatas);
-  }
-
-  resource('metadata').post(metadatas, callback);
-}
-
-function _getMetadata(resource, path, callback) {
-  if (typeof (path) === 'function') {
-    _getMetadataKeys(resource, path);
-  } else {
     callback = callback || default_callback;
-    resource('metadata')(path).get(callback);
+
+    if (typeof (path) === 'string') {
+      metadatas = Camomile._constructMetadataPathObject(path, metadatas);
+    }
+
+    resource('metadata').post(metadatas, callback);
   }
-}
 
-function _getMetadataKeys(resource, path, callback) {
-  if (typeof (path) === 'function') {
-    callback = path;
-    path = '';
-  }
-  callback = callback || default_callback;
-
-  resource('metadata')(path + '.').get(callback);
-}
-
-function _deleteMetadata(resource, path, callback) {
-  callback = callback || default_callback;
-  resource('metadata')(path).delete(callback);
-}
-
-function _sendMetadataFile(resource, path, file, callback) {
-  callback = callback || default_callback;
-
-  var reader = new FileReader();
-  reader.onload = function (e) {
-    var base64 = e.target.result;
-    var infos = base64.split(',');
-    var object = _constructMetadataPathObject(path, {
-      type: 'file',
-      filename: file.name,
-      data: infos[1]
-    });
-
-    _setMetadata(resource, object, callback);
-  };
-  reader.readAsDataURL(file);
-}
-
-function _constructMetadataPathObject(path, metadatas) {
-  var paths = path.split('.');
-
-  var object = {};
-  var accessor = object;
-  for (var i = 0; i < paths.length; i++) {
-    accessor[paths[i]] = {};
-    if (i === paths.length - 1) {
-      accessor[paths[i]] = metadatas;
+  static _getMetadata(resource, path, callback = default_callback) {
+    if (typeof (path) === 'function') {
+      Camomile._getMetadataKeys(resource, path);
     } else {
-      accessor = accessor[paths[i]];
+      resource('metadata')(path).get(callback);
     }
   }
 
-  return object;
-}
+  static _getMetadataKeys(resource, path, callback = default_callback) {
+    if (typeof (path) === 'function') {
+      callback = path;
+      path = '';
+    }
+
+    resource('metadata')(path + '.').get(callback);
+  }
+
+  static _deleteMetadata(resource, path, callback = default_callback) {
+    resource('metadata')(path).delete(callback);
+  }
+
+  _sendMetadataFile(resource, path, file, callback = default_callback) {
+    var reader = new FileReader();
+    reader.onload = (e) => {
+      var base64 = e.target.result;
+      var infos = base64.split(',');
+      var object = Camomile._constructMetadataPathObject(path, {
+        type: 'file',
+        filename: file.name,
+        data: infos[1]
+      });
+
+      this._setMetadata(resource, object, callback);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  static _constructMetadataPathObject(path, metadatas) {
+    var paths = path.split('.');
+
+    var object = {};
+    var accessor = object;
+    for (var i = 0; i < paths.length; i++) {
+      accessor[paths[i]] = {};
+      if (i === paths.length - 1) {
+        accessor[paths[i]] = metadatas;
+      } else {
+        accessor = accessor[paths[i]];
+      }
+    }
+
+    return object;
+  }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // SSE
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-my.listen = function (callback) {
-  callback = callback || default_callback
-  _api('listen').post({}, function (err, datas) {
-    if (err) {
-      return callback(err);
-    }
 
-    _evSource = new EventSource(_baseUrl + '/listen/' + datas.channel_id, {withCredentials: true});
-
-    callback(null, datas.channel_id, new sseChannel(_evSource, datas.channel_id));
-  });
-
-  ////////////
-
-  function sseChannel(_evSource, channel_id) {
-    var t = this;
-
-    t.watchCorpus = watch.bind(t, 'corpus');
-    t.watchMedium = watch.bind(t, 'medium');
-    t.watchLayer = watch.bind(t, 'layer');
-    t.watchQueue = watch.bind(t, 'queue');
-
-    ////////
-
-    function watch(type, id, callback) {
-      var jsonToObjectCallback = jsonToObject.bind(undefined, callback);
-      _api('listen')(channel_id)(type)(id)
-        .put(
-          createListener.bind(undefined, type, id, jsonToObjectCallback)
-        );
-
-      return unWatch.bind(t, type, id, jsonToObjectCallback);
-    }
-
-    function unWatch(type, id, callback) {
-      _api('listen')(channel_id)(type)(id)
-        .delete(
-          removeListener.bind(undefined, type, id, callback)
-        );
-    }
-
-    function createListener(type, id, callback, err) {
+  listen(callback = default_callback) {
+    this._api('listen').post({}, function (err, {channel_id}) {
       if (err) {
         return callback(err);
       }
 
-      _evSource.addEventListener(type + ':' + id, callback);
-    }
+      this._evSource = new EventSource(this._baseUrl + '/listen/' + channel_id, {withCredentials: true});
 
-    function removeListener(type, id, callback, err) {
-      if (err) {
-        return callback(err);
+      callback(null, channel_id, new SseChannel(this._evSource, channel_id));
+    });
+
+    ////////////
+
+    function SseChannel(_evSource, channel_id) {
+      var t = this;
+
+      t.watchCorpus = watch.bind(t, 'corpus');
+      t.watchMedium = watch.bind(t, 'medium');
+      t.watchLayer = watch.bind(t, 'layer');
+      t.watchQueue = watch.bind(t, 'queue');
+
+      ////////
+
+      function watch(type, id, callback) {
+        var jsonToObjectCallback = jsonToObject.bind(undefined, callback);
+        this._api('listen')(channel_id)(type)(id)
+          .put(
+            createListener.bind(undefined, type, id, jsonToObjectCallback)
+          );
+
+        return unWatch.bind(t, type, id, jsonToObjectCallback);
       }
 
-      _evSource.removeEventListener(type + ':' + id, callback);
-    }
+      function unWatch(type, id, callback) {
+        this._api('listen')(channel_id)(type)(id)
+          .delete(
+            removeListener.bind(undefined, type, id, callback)
+          );
+      }
 
-    function jsonToObject(callback, data) {
-      if (data) {
-        callback(null, JSON.parse(data.data));
-        return;
+      function createListener(type, id, callback, err) {
+        if (err) {
+          return callback(err);
+        }
+
+        _evSource.addEventListener(type + ':' + id, callback);
+      }
+
+      function removeListener(type, id, callback, err) {
+        if (err) {
+          return callback(err);
+        }
+
+        _evSource.removeEventListener(type + ':' + id, callback);
+      }
+
+      function jsonToObject(callback, data) {
+        if (data) {
+          callback(null, JSON.parse(data.data));
+        }
       }
     }
-  }
-};
+  };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // UTILS
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-my.getDate = function (callback) {
-  callback = callback || default_callback;
+  getDate(callback = default_callback) {
+    this._api('date').get(callback);
+  };
+}
 
-  _api('date').get(callback);
-};
 
-module.exports = my;
+module.exports = Camomile;
