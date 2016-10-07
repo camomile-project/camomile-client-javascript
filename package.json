@@ -1,0 +1,34 @@
+{
+  "name": "camomile-client",
+  "version": "0.6.3",
+  "description": "Javascript client for Camomile REST API",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "browserify -s Camomile -e ./ | uglifyjs -c warnings=false -m > camomile.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/camomile-project/camomile-client-javascript.git"
+  },
+  "keywords": [
+    "camomile",
+    "client",
+    "annotation",
+    "multimedia",
+    "documents"
+  ],
+  "author": "Hervé BREDIN",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/camomile-project/camomile-client-javascript/issues"
+  },
+  "homepage": "https://github.com/camomile-project/camomile-client-javascript#readme",
+  "dependencies": {
+    "fermata": "^0.11.0-beta1"
+  },
+  "devDependencies": {
+    "browserify": "^13.1.0",
+    "uglify-js": "^2.7.3"
+  }
+}
