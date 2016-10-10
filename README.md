@@ -18,10 +18,10 @@
 
 ```javascript
   var client = new Camomile('http://camomile.fr/api');
-  client.login('username', 'password', callback);
-  client.logout(callback);
+  client.login('username', 'password');
+  client.logout();
 
-  client.getCorpora(callback);
+  client.getCorpora();
   client.createCorpus(...);
 
 ```
