@@ -28,15 +28,27 @@
 
 ### Server Sent Event
 
+See [listen.js](examples/listen.js)
+
 ```javascript
-    client.listen().then(sseChannel => {
-        var cancelWatcher = sseChannel.watchCorpus(<corpus_id>, function(error, data) {
-            console.log(error, data);
+    var client=new Camomile('http://camomile.fr/api');
+    client
+      .login('username', 'password')
+      .then(result =>  {
+        console.log(result);
+        return client.listen();
+      })
+      .then(sseChannel => {
+        sseChannel.watchCorpus(corpusId, function(error, data) {
+          console.log(error, data);
+        }).then(cancelWatcher => {
+          // To unwatch the corpus :
+    
+          //cancelWatcher();
         });
-        
-        // To unwatch the corpus :
-        cancelWatcher();
-    });
+    
+      })
+      .catch(err => console.log(err));
 ```
 
 ## Documentation

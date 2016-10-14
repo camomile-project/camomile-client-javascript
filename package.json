@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/camomile-project/camomile-client-javascript#readme",
   "dependencies": {
+    "eventsource": "^0.2.1",
     "request": "^2.75.0",
     "request-promise": "^4.1.1"
   },

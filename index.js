@@ -22,6 +22,7 @@
 
 "use strict";
 var rp=require("request-promise");
+var EventSource=require("eventsource");
 
 
 function _id(result) {
@@ -609,7 +610,7 @@ class SseChannel
   }
 
   watch(type, id, callback) {
-    return this.client._put(`listen/${this.channel_id}/${type}/${id}`)
+    return this.client._put(`listen/${this.channel_id}/${type}/${id}`,{})
       .then(() => {
         this._evSource.addEventListener(type + ':' + id, callback);
         return this.unWatch.bind(this, type, id, callback);
