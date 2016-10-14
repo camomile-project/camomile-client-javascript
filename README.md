@@ -1,5 +1,10 @@
 # Javascript client for Camomile REST API
 
+[![NPM version](https://img.shields.io/npm/v/camomile-client.svg)](https://www.npmjs.com/package/camomile-client)
+
+## Installation
+
+`npm install camomile-client`
 
 ## Usage
 
@@ -7,20 +12,33 @@
 
 ```html
   <script type="text/javascript" src="camomile.js"></script>
-  <script type="text/javascript" src="fermata.js"></script>
 ```
 
 ### Javascript
 
 ```javascript
-  
-  Camomile.setURL('http://camomile.fr/api')
-  Camomile.login('username', 'password', callback);
-  Camomile.logout(callback);
+  var client = new Camomile('http://camomile.fr/api');
+  client.login('username', 'password', callback);
+  client.logout(callback);
 
-  Camomile.getCorpora(callback);
-  Camomile.createCorpus(...);
+  client.getCorpora(callback);
+  client.createCorpus(...);
 
+```
+
+### Server Sent Event
+
+```javascript
+
+    client.listen(function(err, channel_id, eventSource) {
+        var cancelWatcher = eventSource.watchCorpus(<corpus_id>, function(error, datas) {
+            console.log(error, data);
+        });
+        
+        // For unwatch Corpus :
+        cancelWatcher();
+    });
+    
 ```
 
 ## Documentation
