@@ -576,68 +576,14 @@ class Camomile {
 // SSE
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  listen(callback = default_callback) {
-    this._api('listen').post({}, function (err, {channel_id}) {
-      if (err) {
-        return callback(err);
-      }
-
+  listen() {
+    return this._post('listen',{}).then(({channel_id}) => {
       this._evSource = new EventSource(this._baseUrl + '/listen/' + channel_id, {withCredentials: true});
-
-      callback(null, channel_id, new SseChannel(this._evSource, channel_id));
+      return new SseChannel(this._evSource, channel_id,this);
     });
 
     ////////////
 
-    function SseChannel(_evSource, channel_id) {
-      var t = this;
-
-      t.watchCorpus = watch.bind(t, 'corpus');
-      t.watchMedium = watch.bind(t, 'medium');
-      t.watchLayer = watch.bind(t, 'layer');
-      t.watchQueue = watch.bind(t, 'queue');
-
-      ////////
-
-      function watch(type, id, callback) {
-        var jsonToObjectCallback = jsonToObject.bind(undefined, callback);
-        this._api('listen')(channel_id)(type)(id)
-          .put(
-            createListener.bind(undefined, type, id, jsonToObjectCallback)
-          );
-
-        return unWatch.bind(t, type, id, jsonToObjectCallback);
-      }
-
-      function unWatch(type, id, callback) {
-        this._api('listen')(channel_id)(type)(id)
-          .delete(
-            removeListener.bind(undefined, type, id, callback)
-          );
-      }
-
-      function createListener(type, id, callback, err) {
-        if (err) {
-          return callback(err);
-        }
-
-        _evSource.addEventListener(type + ':' + id, callback);
-      }
-
-      function removeListener(type, id, callback, err) {
-        if (err) {
-          return callback(err);
-        }
-
-        _evSource.removeEventListener(type + ':' + id, callback);
-      }
-
-      function jsonToObject(callback, data) {
-        if (data) {
-          callback(null, JSON.parse(data.data));
-        }
-      }
-    }
   };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -647,6 +593,35 @@ class Camomile {
   getDate() {
     return this._get('date');
   };
+}
+
+
+class SseChannel
+{
+  constructor(_evSource, channel_id, client) {
+    this._evSource=_evSource;
+    this.channel_id=channel_id;
+    this.client=client;
+    this.watchCorpus = this.watch.bind(this, 'corpus');
+    this.watchMedium = this.watch.bind(this, 'medium');
+    this.watchLayer = this.watch.bind(this, 'layer');
+    this.watchQueue = this.watch.bind(this, 'queue');
+  }
+
+  watch(type, id, callback) {
+    return this.client._put(`listen/${this.channel_id}/${type}/${id}`)
+      .then(() => {
+        this._evSource.addEventListener(type + ':' + id, callback);
+        return this.unWatch.bind(this, type, id, callback);
+      });
+  }
+
+  unWatch(type, id) {
+    this.client._delete(`listen/${this.channel_id}/${type}/${id}`).then(() => {
+      this._evSource.removeEventListener(type + ':' + id, callback);
+    })
+  }
+
 }
 
 

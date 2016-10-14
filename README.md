@@ -29,16 +29,14 @@
 ### Server Sent Event
 
 ```javascript
-
-    client.listen(function(err, channel_id, eventSource) {
-        var cancelWatcher = eventSource.watchCorpus(<corpus_id>, function(error, datas) {
+    client.listen().then(sseChannel => {
+        var cancelWatcher = sseChannel.watchCorpus(<corpus_id>, function(error, data) {
             console.log(error, data);
         });
         
-        // For unwatch Corpus :
+        // To unwatch the corpus :
         cancelWatcher();
     });
-    
 ```
 
 ## Documentation
