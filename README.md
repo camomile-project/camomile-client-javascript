@@ -1,5 +1,10 @@
 # Javascript client for Camomile REST API
 
+[![NPM version](https://img.shields.io/npm/v/camomile-client.svg)](https://www.npmjs.com/package/camomile-client)
+
+## Installation
+
+`npm install camomile-client`
 
 ## Usage
 

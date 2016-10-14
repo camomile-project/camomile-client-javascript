@@ -1,3 +1,10 @@
+## Version 0.7.0 (2016-10-07)
+
+  - feat: options.returns_count
+  - feat: support metadata & watch functionalities
+  - feat: npm packaging
+  - BREAKING: make Camomile a class
+
 ## Version 0.6.3 (2015-06-28)
 
   - feat: support for .../count routes
