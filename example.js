@@ -15,18 +15,11 @@ var user=process.argv[3];
 var password=process.argv[4];
 
 var client=new Camomile(host);
-client.login(user, password, function(err,result) {
-  if(err) {
-    console.log(err);
-    return;
-  }
-  console.log(result);
-
-  client.me(function(err,data) {
-    if(err) {
-      console.log(err);
-      return;
-    }
-    console.log(data)
-  });
-});
+client
+  .login(user, password)
+  .then(result =>  {
+    console.log(result);
+    return client.me();
+  })
+  .then(result => console.log(result))
+  .catch(err => console.log(err));
