@@ -19,16 +19,13 @@ client
   .login(user, password)
   .then(result =>  {
     console.log(result);
-    return client.listen();
-  })
-  .then(sseChannel => {
-    sseChannel.watchCorpus(corpusId, function(error, data) {
+    return client.watchCorpus(corpusId, function(error, data) {
       console.log(error, data);
-    }).then(cancelWatcher => {
+    });
+  })
+  .then(cancelWatcher => {
       // To unwatch the corpus :
 
       //cancelWatcher();
-    });
-
-  })
+    })
   .catch(err => console.log(err));

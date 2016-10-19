@@ -62,7 +62,42 @@ class Camomile {
     this._baseUrl = url;
     this._cookies = undefined;
     this._evSource = undefined;
+
+    this.watchCorpus = this._watch.bind(this, 'corpus');
+    this.watchMedium = this._watch.bind(this, 'medium');
+    this.watchLayer = this._watch.bind(this, 'layer');
+    this.watchQueue = this._watch.bind(this, 'queue');
   }
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// SSE
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
+  _watch(type, id, callback) {
+    return (this._evSource===undefined ? this._listen() : Promise.resolve())
+      .then(() => this._put(`listen/${this.channel_id}/${type}/${id}`,{}))
+      .then(() => {
+        this._evSource.addEventListener(type + ':' + id, callback);
+        return this._unWatch.bind(this, type, id, callback);
+      });
+  }
+
+  _unWatch(type, id) {
+    this._delete(`listen/${this.channel_id}/${type}/${id}`).then(() => {
+      this._evSource.removeEventListener(type + ':' + id, callback);
+    })
+  }
+
+
+  _listen() {
+    return this._post('listen',{}).then(({channel_id}) => {
+      this._evSource = new EventSource(this._baseUrl + '/listen/' + channel_id, {withCredentials: true});
+      this.channel_id=channel_id;
+    });
+  }
+  
+////////////
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // AUTHENTICATION
@@ -573,19 +608,6 @@ class Camomile {
     return object;
   }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// SSE
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-  listen() {
-    return this._post('listen',{}).then(({channel_id}) => {
-      this._evSource = new EventSource(this._baseUrl + '/listen/' + channel_id, {withCredentials: true});
-      return new SseChannel(this._evSource, channel_id,this);
-    });
-
-    ////////////
-
-  };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // UTILS
@@ -597,33 +619,7 @@ class Camomile {
 }
 
 
-class SseChannel
-{
-  constructor(_evSource, channel_id, client) {
-    this._evSource=_evSource;
-    this.channel_id=channel_id;
-    this.client=client;
-    this.watchCorpus = this.watch.bind(this, 'corpus');
-    this.watchMedium = this.watch.bind(this, 'medium');
-    this.watchLayer = this.watch.bind(this, 'layer');
-    this.watchQueue = this.watch.bind(this, 'queue');
-  }
 
-  watch(type, id, callback) {
-    return this.client._put(`listen/${this.channel_id}/${type}/${id}`,{})
-      .then(() => {
-        this._evSource.addEventListener(type + ':' + id, callback);
-        return this.unWatch.bind(this, type, id, callback);
-      });
-  }
-
-  unWatch(type, id) {
-    this.client._delete(`listen/${this.channel_id}/${type}/${id}`).then(() => {
-      this._evSource.removeEventListener(type + ':' + id, callback);
-    })
-  }
-
-}
 
 
 module.exports = Camomile;
