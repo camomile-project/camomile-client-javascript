@@ -67,6 +67,11 @@ class Camomile {
     this.watchMedium = this._watch.bind(this, 'medium');
     this.watchLayer = this._watch.bind(this, 'layer');
     this.watchQueue = this._watch.bind(this, 'queue');
+
+    this.unWatchCorpus = this._unWatch.bind(this, 'corpus');
+    this.unWatchMedium = this._unWatch.bind(this, 'medium');
+    this.unWatchLayer = this._unWatch.bind(this, 'layer');
+    this.unWatchQueue = this._unWatch.bind(this, 'queue');
   }
 
 
@@ -79,12 +84,11 @@ class Camomile {
       .then(() => this._put(`listen/${this.channel_id}/${type}/${id}`,{}))
       .then(() => {
         this._evSource.addEventListener(type + ':' + id, callback);
-        return this._unWatch.bind(this, type, id, callback);
       });
   }
 
-  _unWatch(type, id) {
-    this._delete(`listen/${this.channel_id}/${type}/${id}`).then(() => {
+  _unWatch(type, id, callback) {
+    return this._delete(`listen/${this.channel_id}/${type}/${id}`).then(() => {
       this._evSource.removeEventListener(type + ':' + id, callback);
     })
   }

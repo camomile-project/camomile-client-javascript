@@ -14,18 +14,20 @@ var user=process.argv[3];
 var password=process.argv[4];
 var corpusId=process.argv[5];
 
+var listener=function(error, data) {
+  console.log(error, data);
+};
+
 var client=new Camomile(host);
 client
   .login(user, password)
   .then(result =>  {
     console.log(result);
-    return client.watchCorpus(corpusId, function(error, data) {
-      console.log(error, data);
-    });
+    return client.watchCorpus(corpusId, listener);
   })
-  .then(cancelWatcher => {
+  .then(() => {
       // To unwatch the corpus :
 
-      //cancelWatcher();
+      //client.unWatchCorpus(corpusId, listener);
     })
   .catch(err => console.log(err));

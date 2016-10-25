@@ -31,19 +31,21 @@
 See [listen.js](examples/listen.js)
 
 ```javascript
+var listener=function(error, data) {
+  console.log(error, data);
+};
+
 var client=new Camomile('http://camomile.fr/api');
 client
   .login('username', 'password')
   .then(result =>  {
     console.log(result);
-    return client.watchCorpus(corpusId, function(error, data) {
-      console.log(error, data);
-    });
+    return client.watchCorpus(corpusId, listener);
   })
-  .then(cancelWatcher => {
+  .then(() => {
       // To unwatch the corpus :
 
-      //cancelWatcher();
+      //client.unWatchCorpus(corpusId, listener);
     })
   .catch(err => console.log(err));
 ```
