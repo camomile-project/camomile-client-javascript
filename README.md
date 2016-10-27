@@ -31,24 +31,23 @@
 See [listen.js](examples/listen.js)
 
 ```javascript
-    var client=new Camomile('http://camomile.fr/api');
-    client
-      .login('username', 'password')
-      .then(result =>  {
-        console.log(result);
-        return client.listen();
-      })
-      .then(sseChannel => {
-        sseChannel.watchCorpus(corpusId, function(error, data) {
-          console.log(error, data);
-        }).then(cancelWatcher => {
-          // To unwatch the corpus :
-    
-          //cancelWatcher();
-        });
-    
-      })
-      .catch(err => console.log(err));
+var listener=function(error, data) {
+  console.log(error, data);
+};
+
+var client=new Camomile('http://camomile.fr/api');
+client
+  .login('username', 'password')
+  .then(result =>  {
+    console.log(result);
+    return client.watchCorpus(corpusId, listener);
+  })
+  .then(() => {
+      // To unwatch the corpus :
+
+      //client.unwatchCorpus(corpusId, listener);
+    })
+  .catch(err => console.log(err));
 ```
 
 ## Documentation
