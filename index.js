@@ -21,27 +21,8 @@
 // SOFTWARE.
 
 "use strict";
-var fermata = require("fermata");
-
-fermata.registerPlugin('cookieAuth', function (transport, camomileClient) {
-  return function (req, callback) {
-    if (camomileClient._cookies) req.headers['Cookie'] = camomileClient._cookies;
-    else req.options.xhr = {withCredentials: true};
-    transport(req, callback);
-  }
-});
-
-fermata.registerPlugin('jsonAuth', function (transport, baseURL, camomileClient) {
-  return transport.using('json', baseURL).using('cookieAuth', camomileClient);
-});
-
-var default_callback = function (err, data) {
-  if (err) {
-    console.log(err);
-  } else {
-    console.log(data);
-  }
-};
+var rp=require("request-promise");
+var EventSource=require("eventsource");
 
 
 function _id(result) {
@@ -53,241 +34,184 @@ function _id(result) {
   return result._id;
 }
 
-function _ID(callback) {
-  return function (err, data, headers) {
-    if (!err) {
-      data = _id(data);
-    }
-    callback(err, data, headers);
-  };
+function _ID(returns_id) {
+  return returns_id ? _id : data => data;
 }
 
-
-class Camomile {
-  constructor(url) {
-    this._baseUrl = url;
-    this._api = fermata.jsonAuth(url, this);
-    this._cookies = undefined;
-    this._evSource = undefined;
-  }
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // HELPER FUNCTIONS
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  _user(id_user) {
-    var user = this._api('user');
-    if (id_user) {
-      user = user(id_user);
-    }
-    return user;
-  };
 
-  _group(id_group) {
-    var group = this._api('group');
-    if (id_group) {
-      group = group(id_group);
-    }
-    return group;
-  };
+function opt(n,id) {
+  return id ? `${n}/${id}` : n;
+}
 
-  _corpus(id_corpus) {
-    var corpus = this._api('corpus');
-    if (id_corpus) {
-      corpus = corpus(id_corpus);
-    }
-    return corpus;
-  };
+var _user=(id) => opt('user',id);
+var _group=(id) => opt('group',id);
+var _corpus=(id) => opt('corpus',id);
+var _medium=(id) => opt('medium',id);
+var _layer=(id) => opt('layer',id);
+var _annotation=(id) => opt('annotation',id);
+var _queue=(id) => opt('queue',id);
 
-  _medium(id_medium) {
-    var medium = this._api('medium');
-    if (id_medium) {
-      medium = medium(id_medium);
-    }
-    return medium;
-  };
+class Camomile {
+  constructor(url) {
+    this._baseUrl = url;
+    this._cookies = undefined;
+    this._evSource = undefined;
 
-  _layer(id_layer) {
-    var layer = this._api('layer');
-    if (id_layer) {
-      layer = layer(id_layer);
-    }
-    return layer;
-  };
+    this.watchCorpus = this._watch.bind(this, 'corpus');
+    this.watchMedium = this._watch.bind(this, 'medium');
+    this.watchLayer = this._watch.bind(this, 'layer');
+    this.watchQueue = this._watch.bind(this, 'queue');
 
-  _annotation(id_annotation) {
-    var annotation = this._api('annotation');
-    if (id_annotation) {
-      annotation = annotation(id_annotation);
-    }
-    return annotation;
-  };
+    this.unwatchCorpus = this._unwatch.bind(this, 'corpus');
+    this.unwatchMedium = this._unwatch.bind(this, 'medium');
+    this.unwatchLayer = this._unwatch.bind(this, 'layer');
+    this.unwatchQueue = this._unwatch.bind(this, 'queue');
+  }
 
-  _queue(id_queue) {
-    var queue = this._api('queue');
-    if (id_queue) {
-      queue = queue(id_queue);
-    }
-    return queue;
-  };
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// SSE
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
+  _watch(type, id, callback) {
+    return (this._evSource===undefined ? this._listen() : Promise.resolve())
+      .then(() => this._put(`listen/${this.channel_id}/${type}/${id}`,{}))
+      .then(() => {
+        this._evSource.addEventListener(type + ':' + id, callback);
+      });
+  }
+
+  _unwatch(type, id, callback) {
+    return this._delete(`listen/${this.channel_id}/${type}/${id}`).then(() => {
+      this._evSource.removeEventListener(type + ':' + id, callback);
+    })
+  }
+
+
+  _listen() {
+    return this._post('listen',{}).then(({channel_id}) => {
+      this._evSource = new EventSource(this._baseUrl + '/listen/' + channel_id, {withCredentials: true});
+      this.channel_id=channel_id;
+    });
+  }
+  
+////////////
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // AUTHENTICATION
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  setURL(url) {
-    this._baseUrl = url;
+  login(username, password) {
+    return this._post('login',{username,password},true).then(data => {
+      if (data.headers['set-cookie'] && data.headers['set-cookie'][0]) this._cookies = data.headers['set-cookie'][0];
 
-    fermata.registerPlugin('cookieAuth', function (transport) {
-      return function (req, callback) {
-        if (this._cookies) req.headers['Cookie'] = this._cookies;
-        else req.options.xhr = {withCredentials: true};
-        transport(req, callback);
-      }
-    });
-
-    fermata.registerPlugin('jsonAuth', function (transport, baseURL) {
-      return transport.using('json', baseURL).using('cookieAuth');
-    });
-
-    this._api = fermata.jsonAuth(url);
-  };
-
-  login(username, password, callback = default_callback) {
-    var data = {};
-    data.username = username;
-    data.password = password;
-
-    this._api('login').post(data, (err, result, data) => {
-      if (err) {
-        return callback(err);
-      }
-      if (data['Set-Cookie'] && data['Set-Cookie'][0]) this._cookies = data['Set-Cookie'][0];
-
-      callback(err, result, data);
+      return data.body;
     });
   };
 
-  logout(callback = default_callback) {
-    this._api('logout').post({}, callback);
+  logout() {
+    return this._post('logout',{});
   };
 
-  me(callback = default_callback) {
-    this._api('me').get(callback);
+  _get(uri,parameters) {
+    return rp({uri:`${this._baseUrl}/${uri}`,qs:parameters,json: true,headers:{'Cookie':this._cookies},withCredentials:true});
+  }
+
+  _put(uri,data) {
+    return rp({method: 'put', uri:`${this._baseUrl}/${uri}`, json: data,headers:{'Cookie':this._cookies},withCredentials:true});
+  }
+
+  _post(uri,data,full=false) {
+    return rp({method: 'post', uri:`${this._baseUrl}/${uri}`, json: data,headers:{'Cookie':this._cookies},withCredentials:true,resolveWithFullResponse: full});
+  }
+
+  _delete(uri) {
+    return rp({method: 'delete', uri:`${this._baseUrl}/${uri}`,json: true,headers:{'Cookie':this._cookies},withCredentials:true});
+  }
+
+  me() {
+    return this._get("me");
   };
 
-  getMyGroups(callback = default_callback) {
-    this._api('me')('group').get(callback);
+  getMyGroups() {
+    return this._get("me/group");
   };
 
-  update_password(new_password, callback = default_callback) {
-    var data = {};
-    data.password = new_password;
-
-    this._api('me').put(data, callback);
+  update_password(new_password) {
+    return this._put('me',{password:new_password});
   };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // USERS
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  getUser(user, callback = default_callback) {
-
-    this._user(user).get(callback);
+  
+  getUser(user) {
+    return this._get(_user(user));
   };
 
-  getUsers(callback = default_callback, {returns_id,filter={}} = {}) {
+  getUsers({returns_id,filter:{username,role}={}} = {}) {
     // Available filters: username, role
-
-    if (returns_id) {
-      callback = _ID(callback);
-    }
-
-    this._user()(filter).get(callback);
+    return this._get('user',{username,role}).then(_ID(returns_id));
   };
 
-  createUser(username, password, description = {}, role = 'user', callback = default_callback, {returns_id} = {}) {
-
-    if (returns_id) {
-      callback = _ID(callback);
-    }
-
-    var data = {};
-    data.username = username;
-    data.password = password;
-    data.description = description;
-    data.role = role;
-
-    this._user().post(data, callback);
+  createUser(username, password, description = {}, role = 'user', {returns_id} = {}) {
+    return this._post('user',{username,password,description,role}).then(_ID(returns_id));
   };
 
-  updateUser(user, fields = {}, callback = default_callback) {
+  updateUser(user, fields = {}) {
     // Updatable fields: password, description, role
-
-    this._user(user).put(fields, callback);
+    return this._put(_user(user),fields);
   };
 
-  deleteUser(user, callback = default_callback) {
-    this._user(user).delete(callback);
+  deleteUser(user) {
+    return this._delete(_user(user));
   };
 
-  getUserGroups(user, callback = default_callback, {returns_id} = {}) {
-    if (returns_id) {
-      callback = _ID(callback);
-    }
-
-    this._user(user)('group').get(callback);
+  getUserGroups(user, {returns_id} = {}) {
+    return this._get(`${_user(user)}/group`).then(_ID(returns_id));
   };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // GROUPS
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  getGroup(group, callback = default_callback) {
-    this._group(group).get(callback);
+  getGroup(group) {
+    return this._get(_group(group));
   };
 
-  getGroups(callback = default_callback, {returns_id,filter={}} = {}) {
+  getGroups({returns_id,filter:{name}={}} = {}) {
     // Available filters: name
 
-    if (returns_id) {
-      callback = _ID(callback);
-    }
-
-
-    this._group()(filter).get(callback);
+    return this._get('group',{name}).then(_ID(returns_id));
   };
 
-  createGroup(name, description = {}, callback = default_callback, {returns_id} = {}) {
-    if (returns_id) {
-      callback = _ID(callback);
-    }
-
-    var data = {};
-    data.name = name;
-    data.description = description;
-
-    this._group().post(data, callback);
+  createGroup(name, description = {}, {returns_id} = {}) {
+    return this._post('group',{name,description}).then(_ID(returns_id));
   };
 
-  updateGroup(group, fields = {}, callback = default_callback) {
+  updateGroup(group, fields = {}) {
     // Updatable fields: description
 
-    this._group(group).put(fields, callback);
+    return this._put(_group(group),fields);
   }
 
-  deleteGroup(group, callback = default_callback) {
-    this. _group(group).delete(callback);
+  deleteGroup(group) {
+    return this._delete(_group(group));
   }
 
-  addUserToGroup(user, group, callback = default_callback) {
-    this._group(group)('user')(user).put(callback);
+  addUserToGroup(user, group) {
+    return this._put(`${_group(group)}/user/${user}`,{});
   }
 
-  removeUserFromGroup(user, group, callback = default_callback) {
-    this._group(group)('user')(user).delete(callback);
+  removeUserFromGroup(user, group) {
+    return this._delete(`${_group(group)}/user/${user}`);
   };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -295,51 +219,29 @@ class Camomile {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 // Get corpus by ID
-  getCorpus(corpus, callback = default_callback, {history} = {}) {
-    var filter = {};
-    if (history) {
-      filter.history = history;
-    }
-
-    this._corpus(corpus)(filter).get(callback);
+  getCorpus(corpus, {history} = {}) {
+    return this._get(_corpus(corpus),{history});
   };
 
 // Get list of corpora
-  getCorpora(callback = default_callback, {returns_id,filter={},history}={}) {
+  getCorpora({returns_id,filter:{name}={},history}={}) {
     // Available filters: name
 
-    if (returns_id) {
-      callback = _ID(callback);
-    }
-
-    if (history) {
-      filter.history = history;
-    }
-
-    this._corpus()(filter).get(callback);
+    return this._get('corpus',{name,history}).then(_ID(returns_id));
   };
 
-  createCorpus(name, description = {}, callback = default_callback, {returns_id}) {
-    if (returns_id) {
-      callback = _ID(callback);
-    }
-
-    var data = {};
-    data.name = name;
-    data.description = description;
-
-    this._corpus().post(data, callback);
+  createCorpus(name, description = {}, {returns_id}) {
+    return this._post('corpus',{name,description}).then(_ID(returns_id));
   };
 
-  updateCorpus(corpus, fields = {}, callback = default_callback) {
+  updateCorpus(corpus, fields = {}) {
     // Updatable fields: name?, description
 
-    this._corpus(corpus).put(fields, callback);
+    return this._put(_corpus(corpus),fields);
   };
 
-  deleteCorpus(corpus, callback = default_callback) {
-
-    this._corpus(corpus).delete(callback);
+  deleteCorpus(corpus) {
+    return this._delete(_corpus(corpus));
   };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -347,89 +249,50 @@ class Camomile {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 // Get medium by ID
-  getMedium(medium, callback = default_callback, {history} = {}) {
-    var filter = {};
-    if (history) {
-      filter.history = history;
-    }
-
-    this._medium(medium)(filter).get(callback);
+  getMedium(medium, {history} = {}) {
+    return this._get(`${_medium(medium)}`,{history});
   };
 
 // Get medium URL, e.g. for use in <video> src attribute
   getMediumURL(medium, format = "video") {
-    return this._medium(medium)(format)();
+    return `${this._baseUrl}/${_medium(medium)}/${format}`;
   };
 
 // Get list of media
-  getMedia(callback = default_callback, {filter= {},returns_count,returns_id,history}={}) {
+  getMedia({filter:{id_corpus,name}= {},returns_count,returns_id,history}={}) {
     // Available filters: id_corpus, name
 
     // route /corpus/:id_corpus/medium/count
     if (returns_count) {
-
-      if (filter.id_corpus === undefined) {
-        callback('returns_count needs options.filter.id_corpus to be set', null);
-        return;
+      if (id_corpus === undefined) {
+        throw new Error('returns_count needs options.filter.id_corpus to be set');
       }
-
-      let id_corpus = filter.id_corpus;
-      delete filter.id_corpus;
-
-      this._corpus(id_corpus)('medium')('count')(filter).get(callback);
-
-      return;
+      return this._get(`${_corpus(id_corpus)}/medium/count`,{name});
     }
 
-    if (returns_id) {
-      callback = _ID(callback);
-    }
-
-    if (history) {
-      filter.history = history;
-    }
-
-    if (filter.id_corpus !== undefined) {
-      let id_corpus = filter.id_corpus;
-      delete filter.id_corpus;
-      this._corpus(id_corpus)('medium')(filter).get(callback);
+    if (id_corpus !== undefined) {
+      return this._get(`${_corpus(id_corpus)}/medium`,{name,history}).then(_ID(returns_id));
     } else {
-      this._medium()(filter).get(callback);
+      return this._get(`medium`,{name,history}).then(_ID(returns_id));
     }
-
   };
 
-  createMedium(corpus, name, url, description = {}, callback = default_callback, {returns_id} = {}) {
-
-    if (returns_id) {
-      callback = _ID(callback);
-    }
-
-    var data = {};
-    data.name = name;
-    data.url = url;
-    data.description = description;
-
-    this._corpus(corpus)('medium').post(data, callback);
-
+  createMedium(corpus, name, url, description = {}, {returns_id} = {}) {
+    return this._post(`${_corpus(corpus)}/medium`,{name,url,description}).then(_ID(returns_id));
   };
 
-  createMedia(corpus, media, callback = default_callback, {returns_id} = {}) {
-    if (returns_id) {
-      callback = _ID(callback);
-    }
-
-    this._corpus(corpus)('medium').post(media, callback);
+  createMedia(corpus, media, {returns_id} = {}) {
+    return this._post(`${_corpus(corpus)}/medium`,media).then(_ID(returns_id));
   };
 
-  updateMedium(medium, fields = {}, callback = default_callback) {
+  updateMedium(medium, fields = {}) {
     // Updatable fields: name?, url, description
 
-    this._medium(medium).put(fields, callback);
+    return this._put(_medium(medium),fields);
   };
 
-  deleteMedium(medium, callback = default_callback) {
-    this._medium(medium).delete(callback);
+  deleteMedium(medium) {
+    return this._delete(_medium(medium));
   };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -437,289 +300,188 @@ class Camomile {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 // Get layer by ID
-  getLayer(layer, callback = default_callback) {
-    this._layer(layer).get(callback);
+  getLayer(layer) {
+    return this._get(_layer(layer));
   };
 
 // Get list of layers
-  getLayers(callback = default_callback, {returns_id,filter = {}, history} = {}) {
+  getLayers({returns_id,filter:{id_corpus,name} = {}, history} = {}) {
     // Available filters: id_corpus, name
 
-    if (returns_id) {
-      callback = _ID(callback);
-    }
-
-    if (history) {
-      filter.history = history;
-    }
-
-    if (filter.id_corpus !== undefined) {
-      var id_corpus = filter.id_corpus;
-      delete filter.id_corpus;
-      this._corpus(id_corpus)('layer')(filter).get(callback);
+    if (id_corpus !== undefined) {
+      return this._get(`${_corpus(id_corpus)}/layer`,{name,history}).then(_ID(returns_id));
     } else {
-      this._layer()(filter).get(callback);
+      return this._get('layer',{name,history}).then(_ID(returns_id));
     }
-
   };
 
-  createLayer(corpus, name, description, fragment_type, data_type, annotations, callback = default_callback, {returns_id} = {}) {
-
-    if (returns_id) {
-      callback = _ID(callback);
-    }
-
-    var data = {};
-    data.name = name;
-    data.description = description || {};
-    data.fragment_type = fragment_type;
-    data.data_type = data_type;
-    data.annotations = annotations || [];
-
-    this._corpus(corpus)('layer').post(data, callback);
-
+  createLayer(corpus, name, description = {}, fragment_type, data_type, annotations = [], {returns_id} = {}) {
+    return this._post(`${_corpus(corpus)}/layer`,{name,description,fragment_type,data_type,annotations}).then(_ID(returns_id));
   };
 
-  updateLayer(layer, fields = {}, callback = default_callback) {
+  updateLayer(layer, fields = {}) {
     // Updatable fields: name?, description, fragment_type, data_type
 
-    this._layer(layer).put(fields, callback);
-
+    return this._put(_layer(layer),fields);
   };
 
-  deleteLayer(layer, callback = default_callback) {
-    this._layer(layer).delete(callback);
+  deleteLayer(layer) {
+    return this._delete(_layer(layer));
   };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ANNOTATIONS
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  getAnnotation(annotation, callback = default_callback, {history} = {}) {
-
-    var filter = {};
-    if (history) {
-      filter.history = history;
-    }
-
-    this._annotation(annotation)(filter).get(callback);
+  getAnnotation(annotation, {history} = {}) {
+    return this._get(_annotation(annotation),{history});
   };
 
-  getAnnotations(callback = default_callback, {returns_count, filter = {}, history, returns_id} = {}) {
+  getAnnotations({returns_count, filter:{id_medium,id_layer} = {}, history, returns_id} = {}) {
     // Available filters: id_layer, id_medium
 
     // route /layer/:id_layer/annotation/count
     if (returns_count) {
-
-      if (filter.id_layer === undefined) {
-        callback('returns_count needs options.filter.id_layer to be set', null);
-        return;
+      if (id_layer === undefined) {
+        throw new Error('returns_count needs options.filter.id_layer to be set');
       }
-
-      let id_layer = filter.id_layer;
-      delete filter.id_layer;
-      this._layer(id_layer)('annotation')('count')(filter).get(callback);
-
-      return;
+      return this._get(`${_layer(id_layer)}/annotation/count`,{id_medium});
     }
 
-    // returns ID instead of complete annotations
-    if (returns_id) {
-      callback = _ID(callback);
-    }
-
-    if (history) {
-      filter.history = history;
-    }
-
-    if (filter.id_layer !== undefined) {
-      let id_layer = filter.id_layer;
-      delete filter.id_layer;
-      this._layer(id_layer)('annotation')(filter).get(callback);
+    if (id_layer !== undefined) {
+      return this._get(`${_layer(id_layer)}/annotation`,{id_medium,history}).then(_ID(returns_id));
     } else {
-      this._annotation()(filter).get(callback);
+      return this._get('annotation',{id_medium,history}).then(_ID(returns_id));
     }
-
   };
 
-  createAnnotation(layer, medium, fragment = {}, data = {}, callback = default_callback, {returns_id} = {}) {
-    if (returns_id) {
-      callback = _ID(callback);
-    }
-
-    var _data = {
-      id_medium: medium,
-      fragment,
-      data
-    };
-
-    this._layer(layer)('annotation').post(_data, callback);
-
+  createAnnotation(layer, medium, fragment = {}, data = {}, {returns_id} = {}) {
+    return this._post(`${_layer(layer)}/annotation`,{id_medium:medium,fragment,data}).then(_ID(returns_id));
   };
 
-  createAnnotations(layer, annotations, callback = default_callback, {returns_id} = {}) {
-    if (returns_id) {
-      callback = _ID(callback);
-    }
-
-    this._layer(layer)('annotation').post(annotations, callback);
-
+  createAnnotations(layer, annotations, {returns_id} = {}) {
+    return this._post(`${_layer(layer)}/annotation`,annotations).then(_ID(returns_id));
   };
 
-  updateAnnotation(annotation, fields = {}, callback = default_callback) {
+  updateAnnotation(annotation, fields = {}) {
     // Updatable fields: fragment, data
 
-    this._annotation(annotation).put(fields, callback);
-
+    return this._put(_annotation(annotation),fields);
   };
 
-  deleteAnnotation(annotation, callback = default_callback) {
-    this._annotation(annotation).delete(callback);
+  deleteAnnotation(annotation) {
+    return this._delete(_annotation(annotation));
   };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // QUEUES
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  getQueue(queue, callback = default_callback) {
-    this._queue(queue).get(callback);
-
+  getQueue(queue) {
+    return this._get(_queue(queue));
   };
 
-  getQueues(callback = default_callback, {returns_id} = {}) {
-    if (returns_id) {
-      callback = _ID(callback);
-    }
-
-    this._queue().get(callback);
-
+  getQueues({returns_id} = {}) {
+    return this._get('queue').then(_ID(returns_id));
   };
 
-  createQueue(name, description = {}, callback = default_callback, {returns_id} = {}) {
-    if (returns_id) {
-      callback = _ID(callback);
-    }
-
-    var data = {};
-    data.name = name;
-    data.description = description;
-
-    this._queue().post(data, callback);
-
+  createQueue(name, description = {}, {returns_id} = {}) {
+    return this._post('queue',{name,description}).then(_ID(returns_id));
   };
 
-  updateQueue(queue, fields, callback = default_callback) {
+  updateQueue(queue, fields) {
     // Updatable fields: name, description
 
-    this._queue(queue).put(fields, callback);
-
+    return this._put(_queue(queue),fields);
   };
 
-  enqueue(queue, elements, callback = default_callback) {
-    this._queue(queue)('next').put(elements, callback);
+  enqueue(queue, elements) {
+    return this._put(`${_queue(queue)}/next`,elements);
   };
 
-  dequeue(queue, callback = default_callback) {
-    this._queue(queue)('next').get(callback);
+  dequeue(queue) {
+    return this._get(`${_queue(queue)}/next`);
   };
 
-  pick(queue, callback = default_callback) {
-    this._queue(queue)('first').get(callback);
+  pick(queue) {
+    return this._get(`${_queue(queue)}/first`);
   };
 
-  pickAll(queue, callback = default_callback) {
-    this._queue(queue)('all').get(callback);
+  pickAll(queue) {
+    return this._get(`${_queue(queue)}/all`);
   };
 
-  pickLength(queue, callback = default_callback) {
-    this._queue(queue)('length').get(callback);
+  pickLength(queue) {
+    return this._get(`${_queue(queue)}/length`);
   };
 
-  deleteQueue(queue, callback = default_callback) {
-    this._queue(queue).delete(callback);
+  deleteQueue(queue) {
+    return this._delete(_queue(queue));
   };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // PERMISSIONS
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  getCorpusPermissions(corpus, callback = default_callback) {
-    this._corpus(corpus)('permissions').get(callback);
+  getCorpusPermissions(corpus) {
+    return this._get(`${_corpus(corpus)}/permissions`);
   };
 
-  setCorpusPermissionsForGroup(corpus, group, right, callback = default_callback) {
-    var data = {
-      'right': right
-    };
-    this._corpus(corpus)('group')(group).put(data, callback);
+  setCorpusPermissionsForGroup(corpus, group, right) {
+    return this._put(`${_corpus(corpus)}/group/${group}`,{right});
   };
 
-  removeCorpusPermissionsForGroup(corpus, group, callback = default_callback) {
-    this._corpus(corpus)('group')(group).delete(callback);
+  removeCorpusPermissionsForGroup(corpus, group) {
+    return this._delete(`${_corpus(corpus)}/group/${group}`);
   };
 
-  setCorpusPermissionsForUser(corpus, user, right, callback = default_callback) {
-    var data = {
-      'right': right
-    };
-    this._corpus(corpus)('user')(user).put(data, callback);
+  setCorpusPermissionsForUser(corpus, user, right) {
+    return this._put(`${_corpus(corpus)}/user/${user}`,{right});
   };
 
-  removeCorpusPermissionsForUser(corpus, user, callback = default_callback) {
-    this._corpus(corpus)('user')(user).delete(callback);
+  removeCorpusPermissionsForUser(corpus, user) {
+    return this._delete(`${_corpus(corpus)}/user/${user}`);
   };
 
-  getLayerPermissions(layer, callback = default_callback) {
-    this._layer(layer)('permissions').get(callback);
+
+  getLayerPermissions(layer) {
+    return this._get(`${_layer(layer)}/permissions`);
   };
 
-  setLayerPermissionsForGroup(layer, group, right, callback = default_callback) {
-    var data = {
-      'right': right
-    };
-    this._layer(layer)('group')(group).put(data, callback);
+  setLayerPermissionsForGroup(layer, group, right) {
+    return this._put(`${_layer(layer)}/group/${group}`,{right});
   };
 
-  removeLayerPermissionsForGroup(layer, group, callback = default_callback) {
-    this._layer(layer)('group')(group).delete(callback);
+  removeLayerPermissionsForGroup(layer, group) {
+    return this._delete(`${_layer(layer)}/group/${group}`);
   };
 
-  setLayerPermissionsForUser(layer, user, right, callback = default_callback) {
-    var data = {
-      'right': right
-    };
-    this._layer(layer)('user')(user).put(data, callback);
+  setLayerPermissionsForUser(layer, user, right) {
+    return this._put(`${_layer(layer)}/user/${user}`,{right});
   };
 
-  removeLayerPermissionsForUser(layer, user, callback = default_callback) {
-    this._layer(layer)('user')(user).delete(callback);
+  removeLayerPermissionsForUser(layer, user) {
+    return this._delete(`${_layer(layer)}/user/${user}`);
   };
 
-  getQueuePermissions(queue, callback = default_callback) {
-    this._queue(queue)('permissions').get(callback);
-
+  getQueuePermissions(queue) {
+    return this._get(`${_queue(queue)}/permissions`);
   };
 
-  setQueuePermissionsForGroup(queue, group, right, callback = default_callback) {
-    var data = {
-      'right': right
-    };
-    this._queue(queue)('group')(group).put(data, callback);
+  setQueuePermissionsForGroup(queue, group, right) {
+    return this._put(`${_queue(queue)}/group/${group}`,{right});
   };
 
-  removeQueuePermissionsForGroup(queue, group, callback = default_callback) {
-    this._queue(queue)('group')(group).delete(callback);
+  removeQueuePermissionsForGroup(queue, group) {
+    return this._delete(`${_queue(queue)}/group/${group}`);
   };
 
-  setQueuePermissionsForUser(queue, user, right, callback = default_callback) {
-    var data = {
-      'right': right
-    };
-    this._queue(queue)('user')(user).put(data, callback);
+  setQueuePermissionsForUser(queue, user, right) {
+    return this._put(`${_queue(queue)}/user/${user}`,{right});
   };
 
-  removeQueuePermissionsForUser(queue, user, callback = default_callback) {
-    this._queue(queue)('user')(user).delete(callback);
+  removeQueuePermissionsForUser(queue, user) {
+    return this._delete(`${_queue(queue)}/user/${user}`);
   };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -727,119 +489,110 @@ class Camomile {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 // CORPUS
-  getCorpusMetadata(corpus, path, callback) {
-    this._getMetadata(this._corpus(corpus), path, callback);
+  getCorpusMetadata(corpus, path) {
+    return this._getMetadata(_corpus(corpus), path);
   };
 
-  getCorpusMetadataKeys(corpus, path, callback) {
-    this._getMetadataKeys(this._corpus(corpus), path, callback);
+  getCorpusMetadataKeys(corpus, path) {
+    return this._getMetadataKeys(_corpus(corpus), path);
   };
 
-  setCorpusMetadata(corpus, metadatas, path, callback) {
-    this._setMetadata(this._corpus(corpus), metadatas, path, callback);
+  setCorpusMetadata(corpus, metadatas, path) {
+    return this._setMetadata(_corpus(corpus), metadatas, path);
   };
 
-  sendCorpusMetadataFile(corpus, path, file, callback) {
-    this._sendMetadataFile(this._corpus(corpus), path, file, callback);
+  sendCorpusMetadataFile(corpus, path, file) {
+    return this._sendMetadataFile(_corpus(corpus), path, file);
   };
 
-  deleteCorpusMetadata(corpus, path, callback) {
-    this._deleteMetadata(this._corpus(corpus), path, callback);
+  deleteCorpusMetadata(corpus, path) {
+    return this._deleteMetadata(_corpus(corpus), path);
   };
 
 // LAYER
-  getLayerMetadata(layer, path, callback) {
-    this._getMetadata(this._layer(layer), path, callback);
+  getLayerMetadata(layer, path) {
+    return this._getMetadata(_layer(layer), path);
   };
 
-  getLayerMetadataKeys(layer, path, callback) {
-    this._getMetadataKeys(this._layer(layer), path, callback);
+  getLayerMetadataKeys(layer, path) {
+    return this._getMetadataKeys(_layer(layer), path);
   };
 
-  setLayerMetadata(layer, metadatas, path, callback) {
-    this._setMetadata(this._layer(layer), metadatas, path, callback);
+  setLayerMetadata(layer, metadatas, path) {
+    return this._setMetadata(_layer(layer), metadatas, path);
   };
 
-  msendLayerMetadataFile(layer, path, file, callback) {
-    this._sendMetadataFile(this._layer(layer), path, file, callback);
+  msendLayerMetadataFile(layer, path, file) {
+    return this._sendMetadataFile(_layer(layer), path, file);
   };
 
-  deleteLayerMetadata(layer, path, callback) {
-    this. _deleteMetadata(this._layer(layer), path, callback);
+  deleteLayerMetadata(layer, path) {
+    return this. _deleteMetadata(_layer(layer), path);
   };
 
 // MEDIUM
-  getMediumMetadata(medium, path, callback) {
-    this._getMetadata(this._medium(medium), path, callback);
+  getMediumMetadata(medium, path) {
+    return this._getMetadata(_medium(medium), path);
   };
 
-  getMediumMetadataKeys(medium, path, callback) {
-    this._getMetadataKeys(this._medium(medium), path, callback);
+  getMediumMetadataKeys(medium, path) {
+    return this._getMetadataKeys(_medium(medium), path);
   };
 
-  static setMediumMetadata(medium, metadatas, path, callback) {
-    Camomile._setMetadata(this._medium(medium), metadatas, path, callback);
+  setMediumMetadata(medium, metadatas, path) {
+    return this._setMetadata(_medium(medium), metadatas, path);
   };
 
-  sendMediumMetadataFile(medium, path, file, callback) {
-    this._sendMetadataFile(this._medium(medium), path, file, callback);
+  sendMediumMetadataFile(medium, path, file) {
+    return this._sendMetadataFile(_medium(medium), path, file);
   };
 
-  deleteMediumMetadata(medium, path, callback) {
-    this._deleteMetadata(this._medium(medium), path, callback);
+  deleteMediumMetadata(medium, path) {
+    return this._deleteMetadata(_medium(medium), path);
   };
 
 ////
 
-  static _setMetadata(resource, metadatas, path, callback) {
-    if (typeof (path) === 'function') {
-      callback = path || default_callback;
-    }
-
-    callback = callback || default_callback;
-
-    if (typeof (path) === 'string') {
+  _setMetadata(resource, metadatas, path) {
+    if (path) {
       metadatas = Camomile._constructMetadataPathObject(path, metadatas);
     }
 
-    resource('metadata').post(metadatas, callback);
+    return this._post(`${resource}/metadata`,metadatas);
   }
 
-  static _getMetadata(resource, path, callback = default_callback) {
-    if (typeof (path) === 'function') {
-      Camomile._getMetadataKeys(resource, path);
+  _getMetadata(resource, path) {
+    if (!path) {
+      return this._getMetadataKeys(resource);
     } else {
-      resource('metadata')(path).get(callback);
+      return this._get(`${resource}/metadata/${path}`);
     }
   }
 
-  static _getMetadataKeys(resource, path, callback = default_callback) {
-    if (typeof (path) === 'function') {
-      callback = path;
-      path = '';
-    }
-
-    resource('metadata')(path + '.').get(callback);
+  _getMetadataKeys(resource, path = '') {
+    return this._get(`${resource}/metadata/${path}.`);
   }
 
-  static _deleteMetadata(resource, path, callback = default_callback) {
-    resource('metadata')(path).delete(callback);
+  _deleteMetadata(resource, path) {
+    return this._delete(`${resource}/metadata/${path}`);
   }
 
-  _sendMetadataFile(resource, path, file, callback = default_callback) {
-    var reader = new FileReader();
-    reader.onload = (e) => {
-      var base64 = e.target.result;
-      var infos = base64.split(',');
-      var object = Camomile._constructMetadataPathObject(path, {
-        type: 'file',
-        filename: file.name,
-        data: infos[1]
-      });
+  _sendMetadataFile(resource, path, file) {
+    return new Promise(callback => {
+      var reader = new FileReader();
+      reader.onload = (e) => {
+        var base64 = e.target.result;
+        var infos = base64.split(',');
+        var object = Camomile._constructMetadataPathObject(path, {
+          type: 'file',
+          filename: file.name,
+          data: infos[1]
+        });
 
-      this._setMetadata(resource, object, callback);
-    };
-    reader.readAsDataURL(file);
+        this._setMetadata(resource, object).then(callback);
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   static _constructMetadataPathObject(path, metadatas) {
@@ -859,82 +612,18 @@ class Camomile {
     return object;
   }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// SSE
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-  listen(callback = default_callback) {
-    this._api('listen').post({}, function (err, {channel_id}) {
-      if (err) {
-        return callback(err);
-      }
-
-      this._evSource = new EventSource(this._baseUrl + '/listen/' + channel_id, {withCredentials: true});
-
-      callback(null, channel_id, new SseChannel(this._evSource, channel_id));
-    });
-
-    ////////////
-
-    function SseChannel(_evSource, channel_id) {
-      var t = this;
-
-      t.watchCorpus = watch.bind(t, 'corpus');
-      t.watchMedium = watch.bind(t, 'medium');
-      t.watchLayer = watch.bind(t, 'layer');
-      t.watchQueue = watch.bind(t, 'queue');
-
-      ////////
-
-      function watch(type, id, callback) {
-        var jsonToObjectCallback = jsonToObject.bind(undefined, callback);
-        this._api('listen')(channel_id)(type)(id)
-          .put(
-            createListener.bind(undefined, type, id, jsonToObjectCallback)
-          );
-
-        return unWatch.bind(t, type, id, jsonToObjectCallback);
-      }
-
-      function unWatch(type, id, callback) {
-        this._api('listen')(channel_id)(type)(id)
-          .delete(
-            removeListener.bind(undefined, type, id, callback)
-          );
-      }
-
-      function createListener(type, id, callback, err) {
-        if (err) {
-          return callback(err);
-        }
-
-        _evSource.addEventListener(type + ':' + id, callback);
-      }
-
-      function removeListener(type, id, callback, err) {
-        if (err) {
-          return callback(err);
-        }
-
-        _evSource.removeEventListener(type + ':' + id, callback);
-      }
-
-      function jsonToObject(callback, data) {
-        if (data) {
-          callback(null, JSON.parse(data.data));
-        }
-      }
-    }
-  };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // UTILS
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  getDate(callback = default_callback) {
-    this._api('date').get(callback);
+  getDate() {
+    return this._get('date');
   };
 }
+
+
+
 
 
 module.exports = Camomile;

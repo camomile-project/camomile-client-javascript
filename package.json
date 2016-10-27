@@ -1,6 +1,6 @@
 {
   "name": "camomile-client",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Javascript client for Camomile REST API",
   "main": "index.js",
   "scripts": {
@@ -25,7 +25,9 @@
   },
   "homepage": "https://github.com/camomile-project/camomile-client-javascript#readme",
   "dependencies": {
-    "fermata": "^0.11.0-beta1"
+    "eventsource": "^0.2.1",
+    "request": "^2.75.0",
+    "request-promise": "^4.1.1"
   },
   "devDependencies": {
     "browserify": "^13.1.0",

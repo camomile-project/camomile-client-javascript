@@ -18,27 +18,36 @@
 
 ```javascript
   var client = new Camomile('http://camomile.fr/api');
-  client.login('username', 'password', callback);
-  client.logout(callback);
+  client.login('username', 'password');
+  client.logout();
 
-  client.getCorpora(callback);
+  client.getCorpora();
   client.createCorpus(...);
 
 ```
 
 ### Server Sent Event
 
-```javascript
+See [listen.js](examples/listen.js)
 
-    client.listen(function(err, channel_id, eventSource) {
-        var cancelWatcher = eventSource.watchCorpus(<corpus_id>, function(error, datas) {
-            console.log(error, data);
-        });
-        
-        // For unwatch Corpus :
-        cancelWatcher();
-    });
-    
+```javascript
+var listener=function(error, data) {
+  console.log(error, data);
+};
+
+var client=new Camomile('http://camomile.fr/api');
+client
+  .login('username', 'password')
+  .then(result =>  {
+    console.log(result);
+    return client.watchCorpus(corpusId, listener);
+  })
+  .then(() => {
+      // To unwatch the corpus :
+
+      //client.unwatchCorpus(corpusId, listener);
+    })
+  .catch(err => console.log(err));
 ```
 
 ## Documentation
