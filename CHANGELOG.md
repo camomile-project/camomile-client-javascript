@@ -1,3 +1,8 @@
+## Version 0.8.0 (2016-10-27)
+
+  - BREAKING: use promises instead of callbacks
+  - chore: make (un)watch API coherent with Python API
+
 ## Version 0.7.0 (2016-10-07)
 
   - feat: options.returns_count
