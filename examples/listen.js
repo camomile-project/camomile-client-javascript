@@ -28,6 +28,6 @@ client
   .then(() => {
       // To unwatch the corpus :
 
-      //client.unWatchCorpus(corpusId, listener);
+      //client.unwatchCorpus(corpusId, listener);
     })
   .catch(err => console.log(err));
