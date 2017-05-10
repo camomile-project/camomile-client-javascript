@@ -230,7 +230,7 @@ class Camomile {
     return this._get('corpus',{name,history}).then(_ID(returns_id));
   };
 
-  createCorpus(name, description = {}, {returns_id}) {
+  createCorpus(name, description = {}, {returns_id}={}) {
     return this._post('corpus',{name,description}).then(_ID(returns_id));
   };
 
