@@ -25,12 +25,12 @@
   },
   "homepage": "https://github.com/camomile-project/camomile-client-javascript#readme",
   "dependencies": {
-    "eventsource": "^0.2.1",
+    "eventsource": "rom1504/eventsource#patch-1",
     "request": "^2.75.0",
     "request-promise": "^4.1.1"
   },
   "devDependencies": {
-    "browserify": "^13.1.0",
+    "browserify": "^14.3.0",
     "uglify-es": "^3.0.3"
   }
 }
