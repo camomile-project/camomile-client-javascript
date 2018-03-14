@@ -1,3 +1,8 @@
+## Version 0.9.0 (2018-03-14)
+
+  - fix: fix "watch" in browser
+  - setup: remove "EventSource" polyfill
+
 ## Version 0.8.0 (2016-10-27)
 
   - BREAKING: use promises instead of callbacks
