@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 "use strict";
+var r=require("request");
 var rp=require("request-promise");
 var EventSource=require("eventsource");
 
@@ -78,7 +79,7 @@ class Camomile {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // SSE
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  
+
   _watch(type, id, callback) {
     return (this._evSource===undefined ? this._listen() : Promise.resolve())
       .then(() => this._put(`listen/${this.channel_id}/${type}/${id}`,{}))
@@ -96,11 +97,11 @@ class Camomile {
 
   _listen() {
     return this._post('listen',{}).then(({channel_id}) => {
-      this._evSource = new EventSource(this._baseUrl + '/listen/' + channel_id, {withCredentials: true});
+      this._evSource = new EventSource(this._baseUrl + '/listen/' + channel_id, {withCredentials: true,headers:{'Access-Control-Request-Headers':"content-type"}});
       this.channel_id=channel_id;
     });
   }
-  
+
 ////////////
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -124,11 +125,12 @@ class Camomile {
   }
 
   _put(uri,data) {
-    return rp({method: 'put', uri:`${this._baseUrl}/${uri}`, json: data,headers:{'Cookie':this._cookies},withCredentials:true});
+    return rp({method: 'put', uri:`${this._baseUrl}/${uri}`, json: data,headers:{'Access-Control-Request-Headers':"content-type",'Cookie':this._cookies},withCredentials:true});
   }
 
   _post(uri,data,full=false) {
-    return rp({method: 'post', uri:`${this._baseUrl}/${uri}`, json: data,headers:{'Cookie':this._cookies},withCredentials:true,resolveWithFullResponse: full});
+    return rp({method: 'post', uri:`${this._baseUrl}/${uri}`, json: data,headers:{'Access-Control-Request-Headers':"content-type",'Cookie':this._cookies},
+      withCredentials:true,resolveWithFullResponse: full});
   }
 
   _delete(uri) {
@@ -151,7 +153,7 @@ class Camomile {
 // USERS
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  
+
   getUser(user) {
     return this._get(_user(user));
   };
@@ -230,7 +232,7 @@ class Camomile {
     return this._get('corpus',{name,history}).then(_ID(returns_id));
   };
 
-  createCorpus(name, description = {}, {returns_id}) {
+  createCorpus(name, description = {}, {returns_id}={}) {
     return this._post('corpus',{name,description}).then(_ID(returns_id));
   };
 
