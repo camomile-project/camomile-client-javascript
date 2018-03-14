@@ -1,6 +1,6 @@
 {
   "name": "camomile-client",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Javascript client for Camomile REST API",
   "main": "index.js",
   "scripts": {
@@ -25,7 +25,6 @@
   },
   "homepage": "https://github.com/camomile-project/camomile-client-javascript#readme",
   "dependencies": {
-    "eventsource": "rom1504/eventsource#patch-1",
     "request": "^2.75.0",
     "request-promise": "^4.1.1"
   },

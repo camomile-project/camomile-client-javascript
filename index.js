@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 
-// Copyright (c) 2014-2015 CNRS
+// Copyright (c) 2014-2018 CNRS
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,8 +23,6 @@
 "use strict";
 var r=require("request");
 var rp=require("request-promise");
-var EventSource=require("eventsource");
-
 
 function _id(result) {
   if (Array.isArray(result)) {
